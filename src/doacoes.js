@@ -1,20 +1,42 @@
 // Regras de negócio das doações.
-// TODO (grupo): implementar conforme as histórias e os critérios de aceite da Unidade 1.
 import * as repo from './repositorio.js';
+
+const CAMPOS_OBRIGATORIOS = ['tipo', 'quantidade', 'validade'];
 
 // História zero — "um doador publica uma doação".
 // Critério: tipo, quantidade e validade são obrigatórios.
 export async function criarDoacao({ tipo, quantidade, validade }) {
-  throw new Error('não implementado: criarDoacao');
+  const doacao = { tipo, quantidade, validade };
+
+  const faltando = CAMPOS_OBRIGATORIOS.filter(
+    (campo) => String(doacao[campo] ?? '').trim() === ''
+  );
+  if (faltando.length > 0) {
+    throw new Error(`campos obrigatórios ausentes: ${faltando.join(', ')}`);
+  }
+
+  return repo.inserir(doacao);
 }
 
 // História zero — "uma ONG vê as doações disponíveis".
 export async function listarDisponiveis() {
-  throw new Error('não implementado: listarDisponiveis');
+  return repo.listarDisponiveis();
 }
 
 // História zero — "uma ONG aceita uma doação".
 // Regra do caso: uma doação aceita não fica disponível para outra ONG.
 export async function aceitar(id, ong) {
-  throw new Error('não implementado: aceitar');
+  const doacao = await repo.buscarPorId(id);
+  if (!doacao) {
+    throw new Error('doação não encontrada');
+  }
+
+  // `repo.aceitar` devolve undefined quando a doação deixou de estar
+  // disponível entre esta verificação e a escrita.
+  const aceita = await repo.aceitar(id, ong);
+  if (!aceita) {
+    throw new Error(`doação já foi aceita por ${doacao.ong ?? 'outra ONG'}`);
+  }
+
+  return aceita;
 }
