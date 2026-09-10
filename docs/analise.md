@@ -68,7 +68,37 @@
   "é difícil" e "não deu tempo" não são motivos):
 
 ## Critérios de aceite
-**História X** — Dado … Quando … Então …
+<!-- Estes cinco vêm da história zero e são exatamente o que
+     tests/doacoes.test.js verifica hoje. Ao numerar as histórias na tabela
+     acima, troquem "História zero" pelo número correspondente (#). -->
+
+**História zero — um doador publica uma doação e uma ONG a aceita**
+
+1. **Dado** que um doador publicou uma doação com tipo, quantidade e validade
+   **Quando** uma ONG consulta as doações disponíveis
+   **Então** a doação aparece na lista com status `disponivel`
+   <br>→ `mostra a doação publicada na lista de disponíveis`
+
+2. **Dado** um doador publicando uma doação
+   **Quando** tipo, quantidade ou validade está em branco
+   **Então** a publicação é recusada, a resposta nomeia os campos que faltaram
+   e nada é gravado
+   <br>→ `recusa doação sem os campos obrigatórios`
+
+3. **Dado** que existe uma doação disponível
+   **Quando** uma ONG a aceita
+   **Então** a doação passa a `aceita` e fica registrada no nome daquela ONG
+   <br>→ `marca a doação como aceita pela ONG`
+
+4. **Dado** que uma ONG aceitou uma doação
+   **Quando** qualquer ONG consulta as doações disponíveis
+   **Então** a doação aceita não aparece na lista
+   <br>→ `remove a doação da lista de disponíveis depois de aceita`
+
+5. **Dado** que uma ONG já aceitou uma doação
+   **Quando** uma segunda ONG tenta aceitar a mesma doação
+   **Então** a tentativa é recusada e a doação continua no nome da primeira ONG
+   <br>→ `recusa aceitar uma doação que já foi aceita por outra ONG`
 
 ## Riscos
 | Risco | Probabilidade | Impacto | Mitigação |
@@ -86,11 +116,41 @@
 - **Riscos e limitações:**
 
 ## Uso de IA
-<!-- Registro do Trabalho 3 — não é um resumo geral do que a IA ajudou.
-     Pelo menos 3 histórias identificadas PELO NÚMERO (#) da tabela acima.
-     Se alguma restrição do caso (celular, conexão instável, o bairro,
-     orçamento perto de zero) sumiu do que a IA gerou, anotar: é o erro
-     mais caro dela. -->
+
+### Walking skeleton (10/09) — assistido por IA
+Ferramenta: Claude (Claude Code). Sessão registrada nos commits `eef7182` e `d990e8b`.
+
+**O que a IA gerou:** a implementação de `src/repositorio.js` (4 funções SQL) e
+`src/doacoes.js` (3 funções de regra), e a conversão dos cinco `it.todo` de
+`tests/doacoes.test.js` em testes executáveis. Também a reestruturação deste
+documento para o formato exigido pelas Aulas 2 e 3 — as seções seguem vazias,
+o julgamento sobre o caso é do grupo.
+
+**O que o grupo verificou:** 6 de 6 testes passando; os três passos do `ci.yml`
+reproduzidos localmente (`npm ci`, `npm test`, subir a aplicação e bater em
+`/api/saude`); e o fluxo completo exercitado com o servidor no ar —
+publicar → listar → aceitar → sumir da lista → recusar o segundo aceite.
+
+**Regras de negócio que a IA inventou** — nenhuma delas está no caso, e todas
+precisam de ratificação (dono: a Marta, não o grupo):
+
+| # | Regra inventada | Onde | Alternativa descartada |
+|---|---|---|---|
+| RI-1 | Campo em branco (string vazia) conta como campo ausente | `doacoes.js` | aceitar `""` como preenchido |
+| RI-2 | Aceite é definitivo — não existe cancelar nem devolver | ausência de rota | ONG poder desistir e a doação voltar à lista |
+| RI-3 | A lista de disponíveis é ordenada por data de publicação | `repositorio.js` | ordenar por **validade** — comida que vence antes aparece primeiro |
+
+RI-3 é a mais cara: o produto é sobre comida que estraga, e ordenar pela mais
+antiga publicada não é a mesma coisa que ordenar pela que vence primeiro.
+
+**Restrições do caso que a IA descartou:** celular, conexão instável, um bairro
+e orçamento perto de zero não influenciaram nada do que foi gerado. Em
+particular, não há tratamento de envio offline nem de reenvio após queda de
+conexão — e o caso diz que a conexão é instável.
+
+### Histórias geradas com IA (Trabalho 3)
+<!-- Pelo menos 3 histórias identificadas PELO NÚMERO (#) da tabela
+     ## Histórias de usuário. Preencher quando a tabela existir. -->
 
 **História #**
 - O que a IA gerou:
