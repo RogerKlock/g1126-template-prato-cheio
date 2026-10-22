@@ -95,3 +95,25 @@ O que precisa continuar igual depois da migração, e como se mostra:
 | As regras de negócio não sabem qual banco é usado | `git diff entrega-2 -- src/doacoes.js` vazio |
 | Nenhuma doação real se perde na cópia | `SELECT status, count(*) FROM doacoes GROUP BY status` dá o mesmo resultado no `dados.sqlite` (antes) e no PostgreSQL (depois) |
 | A aplicação sobe | passo "Verificar se a aplicação sobe" do CI (`curl --fail /api/saude`) |
+
+## Revisão — 2026-10-22
+**O que mudou.** O piloto passou a ter doações reais, e os testes rodados na máquina do
+piloto apagaram todas elas (detalhes e decisão no **ADR 0002**).
+
+**A decisão continua valendo**, porque o incidente não foi causado pelo motor do banco: o
+mesmo teria acontecido com PostgreSQL, já que a falha era o banco dos testes poder ser
+trocado por configuração e a limpeza não conferir onde apagava. Migrar na U3, em contêiner,
+continua sendo a escolha, pelos mesmos motivos.
+
+**O que muda na execução da migração:**
+1. **O critério de validação ganha uma linha:** "os testes não conseguem apagar dados de um
+   banco que não seja o de teste" precisa continuar verdade no PostgreSQL. Como lá não
+   existe `:memory:`, o banco de teste passa a ser um banco separado (por exemplo
+   `pratocheio_teste`, num contêiner próprio), e `limparBanco()` recusa quando
+   `current_database()` não for ele. Verificação: os testes de `tests/banco-teste.test.js`,
+   adaptados, verdes no CI.
+2. **Backup antes da cópia é obrigatório**, não só recomendado: os dados agora são reais e
+   já houve uma perda. Copiar o `dados.sqlite` para fora da máquina antes de qualquer passo
+   da migração.
+3. **Nova consequência negativa:** o ambiente de testes da U3 precisa de dois bancos
+   (real e de teste). Quem paga: o grupo, que configura os dois contêineres e o `ci.yml`.
