@@ -9,13 +9,30 @@
 import { createRequire } from 'node:module';
 const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite');
 
-const ARQUIVO = process.env.DATABASE_FILE || 'dados.sqlite';
+// O banco dos testes. Sob o Vitest é sempre este, seja qual for a configuração:
+// nem DATABASE_FILE nem outro vitest.config trocam o banco dos testes pelo banco
+// real (ADR 0002). Fora do Vitest vale DATABASE_FILE, e o padrão é o arquivo local.
+export const BANCO_DE_TESTE = ':memory:';
+
+function arquivoDoBanco() {
+  if (process.env.VITEST) return BANCO_DE_TESTE;
+  return process.env.DATABASE_FILE || 'dados.sqlite';
+}
 
 let db;
+let arquivoAberto;
 
 export function conexao() {
-  if (!db) db = new DatabaseSync(ARQUIVO);
+  if (!db) {
+    arquivoAberto = arquivoDoBanco();
+    db = new DatabaseSync(arquivoAberto);
+  }
   return db;
+}
+
+/** Qual banco esta conexão usa (ou usaria, se ainda não foi aberta). */
+export function bancoEmUso() {
+  return arquivoAberto ?? arquivoDoBanco();
 }
 
 /**
@@ -46,8 +63,18 @@ export async function migrar() {
   `);
 }
 
-/** Apaga todos os dados. Usado pelos testes. */
+/**
+ * Apaga todos os dados. Usado pelos testes.
+ * Recusa, antes de apagar qualquer linha, quando o banco aberto não é o de teste:
+ * foi assim que o piloto perdeu as doações reais (ADR 0002).
+ */
 export async function limparBanco() {
+  conexao();
+  if (arquivoAberto !== BANCO_DE_TESTE) {
+    throw new Error(
+      `limparBanco recusado: o banco em uso é "${arquivoAberto}", não o banco de teste (${BANCO_DE_TESTE})`
+    );
+  }
   conexao().exec('DELETE FROM doacoes');
 }
 
