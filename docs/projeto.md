@@ -71,4 +71,4 @@ D5-B fica **adiada**: resolve R3 melhor, mas custa service worker e estratégia 
 
 **Erro da IA corrigido:** na história do cancelamento, uma ONG que tentasse aceitar uma doação **cancelada** recebia *"já foi aceita por outra ONG"*, e o teste passava porque só conferia o status 400. Corrigido em `aceitar()`, que agora relê a situação, e o teste passou a exigir `/cancelada/`. **Por quê:** a mensagem errada manda a ONG atrás de uma "outra ONG" que não existe.
 
-**O que o grupo mudou:** *(preencher na revisão do PR: o que foi aceito, cortado ou reescrito, e por quê).*
+**O que o grupo mudou:** Roger revisou e aceitou as propostas da IA. Miguel revisou e aprovou o PR #1, que reúne todas as histórias, e corrigiu os integrantes no README (PR #6). O grupo manteve o nome da ferramenta nesta seção, porque o uso de IA é permitido e precisa ser declarado.
