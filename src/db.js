@@ -48,6 +48,13 @@ export async function query(sql, valores = []) {
   return { rows: [], alteradas: info.changes };
 }
 
+// Colunas acrescentadas depois que o piloto já tinha doações reais.
+// `CREATE TABLE IF NOT EXISTS` não mexe numa tabela que já existe, então cada uma
+// entra por `ALTER TABLE ... ADD COLUMN`, só se ainda faltar: nenhum dado é apagado.
+const COLUNAS_ACRESCENTADAS = {
+  coletada_em: 'TEXT',
+};
+
 /** Cria o schema, se ainda não existir. Rodado por `npm run db:migrar` e ao subir o servidor. */
 export async function migrar() {
   conexao().exec(`
@@ -61,6 +68,15 @@ export async function migrar() {
       criada_em   TEXT NOT NULL DEFAULT (datetime('now'))
     )
   `);
+
+  const existentes = new Set(
+    conexao().prepare('PRAGMA table_info(doacoes)').all().map((coluna) => coluna.name)
+  );
+  for (const [coluna, tipo] of Object.entries(COLUNAS_ACRESCENTADAS)) {
+    if (!existentes.has(coluna)) {
+      conexao().exec(`ALTER TABLE doacoes ADD COLUMN ${coluna} ${tipo}`);
+    }
+  }
 }
 
 /**
