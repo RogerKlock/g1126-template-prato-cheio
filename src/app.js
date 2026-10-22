@@ -33,5 +33,37 @@ export function criarApp() {
     }
   });
 
+  app.get('/api/doacoes/aceitas', async (req, res) => {
+    try {
+      res.json(await doacoes.listarAceitas());
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
+  app.post('/api/doacoes/:id/coletar', async (req, res) => {
+    try {
+      res.json(await doacoes.marcarColetada(req.params.id));
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
+  app.post('/api/doacoes/:id/cancelar', async (req, res) => {
+    try {
+      res.json(await doacoes.cancelar(req.params.id));
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
+  app.get('/api/indicadores/aceitas-no-mes', async (req, res) => {
+    try {
+      res.json(await doacoes.aceitasNoMes(req.query.mes));
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
   return app;
 }

@@ -35,8 +35,68 @@ export async function aceitar(id, ong) {
   // disponível entre esta verificação e a escrita.
   const aceita = await repo.aceitar(id, ong);
   if (!aceita) {
-    throw new Error(`doação já foi aceita por ${doacao.ong ?? 'outra ONG'}`);
+    // Relê: a situação pode ter mudado entre a leitura acima e a escrita.
+    const atual = await repo.buscarPorId(id);
+    if (atual.status === 'cancelada') {
+      throw new Error('doação foi cancelada pelo doador');
+    }
+    throw new Error(`doação já foi aceita por ${atual.ong ?? 'outra ONG'}`);
   }
 
   return aceita;
+}
+
+// "O voluntário vê as doações aceitas que precisa buscar."
+export async function listarAceitas() {
+  return repo.listarAceitas();
+}
+
+// "O voluntário marca a doação como coletada."
+// Só uma doação aceita pode ser coletada; repetir a ação não muda o registro.
+export async function marcarColetada(id) {
+  const doacao = await repo.buscarPorId(id);
+  if (!doacao) {
+    throw new Error('doação não encontrada');
+  }
+
+  const coletada = await repo.marcarColetada(id);
+  if (!coletada) {
+    throw new Error(
+      doacao.status === 'coletada'
+        ? 'doação já foi coletada'
+        : `doação não pode ser coletada: está ${doacao.status}`
+    );
+  }
+
+  return coletada;
+}
+
+// "O doador cancela uma doação ainda disponível."
+// Depois do aceite, a ONG já conta com a comida: cancelar deixa de ser permitido.
+export async function cancelar(id) {
+  const doacao = await repo.buscarPorId(id);
+  if (!doacao) {
+    throw new Error('doação não encontrada');
+  }
+
+  const cancelada = await repo.cancelar(id);
+  if (!cancelada) {
+    throw new Error(`doação não pode ser cancelada: está ${doacao.status}`);
+  }
+
+  return cancelada;
+}
+
+// "A Marta vê quantas doações foram aceitas no mês."
+// Conta toda doação aceita no mês, mesmo que já tenha sido coletada depois.
+export async function aceitasNoMes(mes = mesAtual()) {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mes)) {
+    throw new Error('mês inválido: use o formato AAAA-MM');
+  }
+  return { mes, aceitas: await repo.contarAceitasNoMes(mes) };
+}
+
+function mesAtual() {
+  const hoje = new Date();
+  return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
 }

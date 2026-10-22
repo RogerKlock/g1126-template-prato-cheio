@@ -101,8 +101,16 @@
    <br>→ `recusa aceitar uma doação que já foi aceita por outra ONG`
 
 ## Riscos
-| Risco | Probabilidade | Impacto | Mitigação |
-|---|---|---|---|
+<!-- Numerados para que docs/projeto.md e os ADRs possam citá-los (Unidade 2). -->
+
+| # | Risco | Probabilidade | Impacto | Mitigação |
+|---|---|---|---|---|
+| R1 | Comida perecível vence antes de ser aceita e coletada (janela curta) | alta | alto — é a perda que o produto existe para evitar | registrar validade obrigatória; medir o tempo entre publicação, aceite e coleta |
+| R2 | Duas ONGs aceitam a mesma doação ao mesmo tempo e ambas vão buscar | média | alto — viagem perdida e ONG sem a comida prometida | a decisão de quem ganhou fica no banco, não num `if` (critério de aceite 5) |
+| R3 | Conexão instável no celular do voluntário perde ou repete uma ação | alta | médio — coleta registrada duas vezes ou nunca | toda mudança de situação só vale a partir da situação esperada; repetir não muda nada |
+| R4 | Volume real e adesão desconhecidos: o piloto cresce além de um bairro e o banco embutido não aguenta | média | médio | começar simples e registrar quando e como migrar (ADR 0001) |
+| R5 | Vigilância sanitária pede rastreabilidade (o que, quanto, validade, quem recebeu) que o registro não guarda | média | alto — pode suspender o piloto | campos mínimos obrigatórios; guardar quem aceitou e quando |
+| R6 | Dados reais do piloto apagados ou alterados por operação fora do uso normal (testes, manutenção) — *acrescentado em 22/10, após a mudança de contexto* | ocorreu | alto — doações reais perdidas | ADR 0002 |
 
 ## Hipótese e experimento
 

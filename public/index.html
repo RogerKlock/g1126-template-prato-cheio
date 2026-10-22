@@ -17,6 +17,7 @@
 </head>
 <body>
   <h1>Prato Cheio</h1>
+  <p id="indicador"></p>
 
   <fieldset>
     <legend>Publicar doação</legend>
@@ -32,7 +33,32 @@
   <h2>Doações disponíveis</h2>
   <ul id="lista"></ul>
 
+  <h2>Aceitas — aguardando coleta</h2>
+  <ul id="aceitas"></ul>
+
   <script>
+    async function carregarAceitas() {
+      const res = await fetch('/api/doacoes/aceitas');
+      const doacoes = await res.json();
+      const lista = document.getElementById('aceitas');
+      lista.innerHTML = doacoes.length
+        ? ''
+        : '<li>Nenhuma doação aguardando coleta.</li>';
+      for (const d of doacoes) {
+        const li = document.createElement('li');
+        li.textContent = `${d.tipo} — ${d.quantidade} (até ${d.validade}) · ${d.ong} `;
+        const botao = document.createElement('button');
+        botao.textContent = 'Marcar coletada';
+        botao.onclick = async () => {
+          botao.disabled = true; // evita o toque duplo com a conexão lenta
+          await fetch(`/api/doacoes/${d.id}/coletar`, { method: 'POST' });
+          carregarAceitas();
+        };
+        li.appendChild(botao);
+        lista.appendChild(li);
+      }
+    }
+
     async function carregar() {
       const res = await fetch('/api/doacoes');
       const doacoes = await res.json();
@@ -52,8 +78,18 @@
             body: JSON.stringify({ ong: 'Minha ONG' })
           });
           carregar();
+          carregarAceitas();
+          carregarIndicador();
         };
         li.appendChild(botao);
+        const cancelar = document.createElement('button');
+        cancelar.textContent = 'Cancelar (doador)';
+        cancelar.onclick = async () => {
+          if (!confirm(`Cancelar a doação de ${d.tipo}?`)) return;
+          await fetch(`/api/doacoes/${d.id}/cancelar`, { method: 'POST' });
+          carregar();
+        };
+        li.appendChild(cancelar);
         lista.appendChild(li);
       }
     }
@@ -71,7 +107,16 @@
       carregar();
     };
 
+    async function carregarIndicador() {
+      const res = await fetch('/api/indicadores/aceitas-no-mes');
+      const { mes, aceitas } = await res.json();
+      document.getElementById('indicador').textContent =
+        `Doações aceitas em ${mes}: ${aceitas}`;
+    }
+
     carregar();
+    carregarAceitas();
+    carregarIndicador();
   </script>
 </body>
 </html>
