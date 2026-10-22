@@ -2,7 +2,7 @@
 
 **Decisão que sustenta:** D4 (ciclo de vida da doação) e ADR 0001 (o mesmo modelo vai para o PostgreSQL).
 
-**Situação:** proposta — modelo-alvo. O que existe hoje está em `src/db.js` no commit `da51365`; as diferenças estão em `docs/projeto.md`, `## Diagramas`.
+**Situação:** proposta — modelo-alvo. O que existe hoje está em `src/db.js` no commit `7dcff13`; as diferenças estão em `docs/projeto.md`, `## Diagramas`.
 
 # Diagrama de dados — Prato Cheio
 

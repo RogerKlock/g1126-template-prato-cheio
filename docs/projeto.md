@@ -36,7 +36,7 @@ D1 e D4 são de projeto, e não de implementação, porque mudam o que acontece 
 **Divergências entre o diagrama de dados e o `src/db.js`:**
 1. **`DOADOR` não existe no código.** A doação não tem dono, então "o doador vê as próprias doações" não é implementável e qualquer um que tenha o `id` pode agir sobre ela.
 2. **`ONG` é texto livre (`doacoes.ong`), não entidade.** "Casa do Caminho" e "casa do caminho" contam como duas ONGs, e não há chave estrangeira.
-3. **`VOLUNTARIO` não existe, nem as datas de transição.** O código guarda só `criada_em`; não se sabe quando a doação foi aceita nem quem a coletou (R5).
+3. **`VOLUNTARIO` não existe, e falta uma data de transição.** O código guarda `criada_em` e `coletada_em`, mas não quando a doação foi aceita nem quem a coletou (R5).
 
 ## ADRs
 | ADR | Decisão | Status |
