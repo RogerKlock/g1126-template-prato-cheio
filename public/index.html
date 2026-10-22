@@ -17,6 +17,7 @@
 </head>
 <body>
   <h1>Prato Cheio</h1>
+  <p id="indicador"></p>
 
   <fieldset>
     <legend>Publicar doação</legend>
@@ -78,6 +79,7 @@
           });
           carregar();
           carregarAceitas();
+          carregarIndicador();
         };
         li.appendChild(botao);
         const cancelar = document.createElement('button');
@@ -105,8 +107,16 @@
       carregar();
     };
 
+    async function carregarIndicador() {
+      const res = await fetch('/api/indicadores/aceitas-no-mes');
+      const { mes, aceitas } = await res.json();
+      document.getElementById('indicador').textContent =
+        `Doações aceitas em ${mes}: ${aceitas}`;
+    }
+
     carregar();
     carregarAceitas();
+    carregarIndicador();
   </script>
 </body>
 </html>

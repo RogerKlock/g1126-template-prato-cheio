@@ -53,6 +53,7 @@ export async function query(sql, valores = []) {
 // entra por `ALTER TABLE ... ADD COLUMN`, só se ainda faltar: nenhum dado é apagado.
 const COLUNAS_ACRESCENTADAS = {
   coletada_em: 'TEXT',
+  aceita_em: 'TEXT',
 };
 
 /** Cria o schema, se ainda não existir. Rodado por `npm run db:migrar` e ao subir o servidor. */
