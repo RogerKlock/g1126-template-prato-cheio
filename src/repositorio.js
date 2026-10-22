@@ -65,3 +65,16 @@ export async function marcarColetada(id) {
   );
   return rows[0];
 }
+
+// Só uma doação ainda disponível pode ser cancelada. Se uma ONG aceitar no
+// mesmo instante, quem chegar primeiro ao banco ganha e o outro não altera nada.
+export async function cancelar(id) {
+  const { rows } = await query(
+    `UPDATE doacoes
+     SET status = 'cancelada'
+     WHERE id = ? AND status = 'disponivel'
+     RETURNING *`,
+    [id]
+  );
+  return rows[0];
+}

@@ -80,6 +80,14 @@
           carregarAceitas();
         };
         li.appendChild(botao);
+        const cancelar = document.createElement('button');
+        cancelar.textContent = 'Cancelar (doador)';
+        cancelar.onclick = async () => {
+          if (!confirm(`Cancelar a doação de ${d.tipo}?`)) return;
+          await fetch(`/api/doacoes/${d.id}/cancelar`, { method: 'POST' });
+          carregar();
+        };
+        li.appendChild(cancelar);
         lista.appendChild(li);
       }
     }

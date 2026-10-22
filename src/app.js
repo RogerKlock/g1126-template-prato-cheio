@@ -49,5 +49,13 @@ export function criarApp() {
     }
   });
 
+  app.post('/api/doacoes/:id/cancelar', async (req, res) => {
+    try {
+      res.json(await doacoes.cancelar(req.params.id));
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
   return app;
 }

@@ -35,7 +35,12 @@ export async function aceitar(id, ong) {
   // disponível entre esta verificação e a escrita.
   const aceita = await repo.aceitar(id, ong);
   if (!aceita) {
-    throw new Error(`doação já foi aceita por ${doacao.ong ?? 'outra ONG'}`);
+    // Relê: a situação pode ter mudado entre a leitura acima e a escrita.
+    const atual = await repo.buscarPorId(id);
+    if (atual.status === 'cancelada') {
+      throw new Error('doação foi cancelada pelo doador');
+    }
+    throw new Error(`doação já foi aceita por ${atual.ong ?? 'outra ONG'}`);
   }
 
   return aceita;
@@ -64,4 +69,20 @@ export async function marcarColetada(id) {
   }
 
   return coletada;
+}
+
+// "O doador cancela uma doação ainda disponível."
+// Depois do aceite, a ONG já conta com a comida: cancelar deixa de ser permitido.
+export async function cancelar(id) {
+  const doacao = await repo.buscarPorId(id);
+  if (!doacao) {
+    throw new Error('doação não encontrada');
+  }
+
+  const cancelada = await repo.cancelar(id);
+  if (!cancelada) {
+    throw new Error(`doação não pode ser cancelada: está ${doacao.status}`);
+  }
+
+  return cancelada;
 }
