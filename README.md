@@ -26,6 +26,9 @@ npm run dev       # sobe recarregando a cada alteração
 ```
 
 Os testes usam SQLite **em memória**, então não sujam o banco de desenvolvimento.
+Isso não depende da configuração: sob o Vitest o `src/db.js` usa sempre `:memory:`, e o
+`limparBanco()` se recusa a apagar qualquer outro banco (ADR 0002). Mesmo assim, **não rode
+os testes na máquina do piloto**: não há motivo para isso, e o banco real fica lá.
 
 > Ao rodar `npm test` o Node imprime `ExperimentalWarning: SQLite is an experimental feature`.
 > É esperado — o módulo embutido `node:sqlite` ainda é marcado como experimental. Não é erro e não reprova o CI.
