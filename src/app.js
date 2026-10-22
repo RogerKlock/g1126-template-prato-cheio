@@ -57,5 +57,13 @@ export function criarApp() {
     }
   });
 
+  app.get('/api/indicadores/aceitas-no-mes', async (req, res) => {
+    try {
+      res.json(await doacoes.aceitasNoMes(req.query.mes));
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
   return app;
 }

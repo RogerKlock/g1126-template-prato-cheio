@@ -45,7 +45,7 @@ export async function buscarPorId(id) {
 export async function aceitar(id, ong) {
   const { rows } = await query(
     `UPDATE doacoes
-     SET status = 'aceita', ong = ?
+     SET status = 'aceita', ong = ?, aceita_em = datetime('now')
      WHERE id = ? AND status = 'disponivel'
      RETURNING *`,
     [ong, id]
@@ -77,4 +77,16 @@ export async function cancelar(id) {
     [id]
   );
   return rows[0];
+}
+
+// Datas são gravadas em UTC (`datetime('now')`); o mês é contado no fuso da
+// máquina do piloto, que é o mês que a Marta enxerga.
+export async function contarAceitasNoMes(mes) {
+  const { rows } = await query(
+    `SELECT count(*) AS aceitas FROM doacoes
+     WHERE aceita_em IS NOT NULL
+       AND strftime('%Y-%m', aceita_em, 'localtime') = ?`,
+    [mes]
+  );
+  return rows[0].aceitas;
 }

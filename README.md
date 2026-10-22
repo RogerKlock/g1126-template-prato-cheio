@@ -99,8 +99,16 @@ a doação sai da lista → uma segunda ONG que tente aceitar é recusada.
 Os cinco critérios de aceite estão em `tests/doacoes.test.js` (6 de 6 testes
 passando) e escritos em Dado/Quando/Então em `docs/analise.md`.
 
-**Falta:** preencher o documento de análise (`docs/analise.md`) e a
-retrospectiva da iteração (`docs/retrospectivas/1.md`).
+**Unidade 2 — projeto + incremento.** Documento de projeto em `docs/projeto.md`,
+ADRs em `docs/adr/`, diagramas em `docs/diagramas/`. Histórias novas, cada uma
+com testes em `tests/`:
+
+| História | Rota |
+|---|---|
+| 4b — os testes só tocam o banco de teste (ADR 0002) | — (`src/db.js`) |
+| voluntário marca a doação como coletada | `POST /api/doacoes/:id/coletar`, `GET /api/doacoes/aceitas` |
+| doador cancela uma doação ainda disponível | `POST /api/doacoes/:id/cancelar` |
+| Marta vê quantas doações foram aceitas no mês | `GET /api/indicadores/aceitas-no-mes?mes=AAAA-MM` |
 
 ## Uso de IA
 

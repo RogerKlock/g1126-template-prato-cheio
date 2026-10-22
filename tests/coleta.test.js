@@ -107,6 +107,7 @@ describe('migração do schema com dados reais', () => {
 
     const colunas = conexao().prepare('PRAGMA table_info(doacoes)').all().map((c) => c.name);
     expect(colunas).toContain('coletada_em');
+    expect(colunas).toContain('aceita_em');
     const { rows } = await query('SELECT tipo, status FROM doacoes');
     expect(rows).toEqual([{ tipo: 'Sopa', status: 'disponivel' }]);
   });

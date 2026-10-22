@@ -2,7 +2,7 @@
 
 **Decisão que sustenta:** D4 (ciclo de vida da doação) e D5 (uma página web para o celular) em `docs/projeto.md`.
 
-**Situação:** retrato da `main` no commit `6a04804`; setas marcadas *(proposta)* ainda não existem no código.
+**Situação:** retrato da `main` no commit `502b97e`; setas marcadas *(proposta)* ainda não existem no código.
 
 # Diagrama de contexto — Prato Cheio
 
@@ -20,7 +20,7 @@ flowchart LR
   S -- "lista doações disponíveis" --> O
   O -- "aceita uma doação" --> S
   V -- "marca doação aceita como coletada" --> S
-  S -- "aceitas no mês (proposta)" --> M
+  S -- "aceitas no mês" --> M
   S -- "registro: o que, quanto, validade, qual ONG (proposta)" --> VS
 ```
 

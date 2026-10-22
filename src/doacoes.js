@@ -86,3 +86,17 @@ export async function cancelar(id) {
 
   return cancelada;
 }
+
+// "A Marta vê quantas doações foram aceitas no mês."
+// Conta toda doação aceita no mês, mesmo que já tenha sido coletada depois.
+export async function aceitasNoMes(mes = mesAtual()) {
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mes)) {
+    throw new Error('mês inválido: use o formato AAAA-MM');
+  }
+  return { mes, aceitas: await repo.contarAceitasNoMes(mes) };
+}
+
+function mesAtual() {
+  const hoje = new Date();
+  return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+}
