@@ -24,6 +24,15 @@ export async function listarDisponiveis() {
   return rows;
 }
 
+export async function listarAceitas() {
+  const { rows } = await query(
+    `SELECT * FROM doacoes
+     WHERE status = 'aceita'
+     ORDER BY validade, id`
+  );
+  return rows;
+}
+
 export async function buscarPorId(id) {
   const { rows } = await query('SELECT * FROM doacoes WHERE id = ?', [id]);
   return rows[0];
@@ -40,6 +49,19 @@ export async function aceitar(id, ong) {
      WHERE id = ? AND status = 'disponivel'
      RETURNING *`,
     [ong, id]
+  );
+  return rows[0];
+}
+
+// Mesma trava do aceite: só sai de 'aceita' para 'coletada'. Se o celular do
+// voluntário reenviar a requisição, a segunda não encontra linha e nada muda.
+export async function marcarColetada(id) {
+  const { rows } = await query(
+    `UPDATE doacoes
+     SET status = 'coletada', coletada_em = datetime('now')
+     WHERE id = ? AND status = 'aceita'
+     RETURNING *`,
+    [id]
   );
   return rows[0];
 }

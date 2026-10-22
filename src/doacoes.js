@@ -40,3 +40,28 @@ export async function aceitar(id, ong) {
 
   return aceita;
 }
+
+// "O voluntário vê as doações aceitas que precisa buscar."
+export async function listarAceitas() {
+  return repo.listarAceitas();
+}
+
+// "O voluntário marca a doação como coletada."
+// Só uma doação aceita pode ser coletada; repetir a ação não muda o registro.
+export async function marcarColetada(id) {
+  const doacao = await repo.buscarPorId(id);
+  if (!doacao) {
+    throw new Error('doação não encontrada');
+  }
+
+  const coletada = await repo.marcarColetada(id);
+  if (!coletada) {
+    throw new Error(
+      doacao.status === 'coletada'
+        ? 'doação já foi coletada'
+        : `doação não pode ser coletada: está ${doacao.status}`
+    );
+  }
+
+  return coletada;
+}
