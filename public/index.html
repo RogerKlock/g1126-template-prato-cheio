@@ -20,6 +20,13 @@
   <p id="indicador"></p>
 
   <fieldset>
+    <legend>Resultado do mês (coordenação)</legend>
+    <label for="mes">Mês</label>
+    <input id="mes" type="month">
+    <ul id="resultado"></ul>
+  </fieldset>
+
+  <fieldset>
     <legend>Publicar doação</legend>
     <label for="doador">Seu nome ou do estabelecimento (doador)</label>
     <input id="doador" placeholder="Ex.: Padaria Pão Bom" autocomplete="organization">
@@ -104,6 +111,7 @@
           if (!res.ok) alert((await res.json()).erro);
           carregarAceitas();
           carregarMinhas();
+          carregarResultado();
         };
         li.appendChild(botao);
         const devolver = document.createElement('button');
@@ -122,6 +130,7 @@
           carregar();
           carregarAceitas();
           carregarMinhas();
+          carregarResultado();
         };
         li.appendChild(devolver);
         lista.appendChild(li);
@@ -160,6 +169,7 @@
           carregarAceitas();
           carregarMinhas();
           carregarIndicador();
+          carregarResultado();
         };
         li.appendChild(botao);
         const cancelar = document.createElement('button');
@@ -190,6 +200,7 @@
       if (!res.ok) { alert((await res.json()).erro); return; }
       carregar();
       carregarMinhas();
+      carregarResultado();
     };
 
     async function carregarIndicador() {
@@ -199,10 +210,36 @@
         `Doações aceitas em ${mes}: ${aceitas}`;
     }
 
+    // H4: o resultado do mês para a Marta (cada doação conta no mês da publicação).
+    const campoMes = document.getElementById('mes');
+    const hoje = new Date();
+    campoMes.value = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+    campoMes.onchange = carregarResultado;
+
+    async function carregarResultado() {
+      const res = await fetch(`/api/indicadores/resultado-do-mes?mes=${encodeURIComponent(campoMes.value)}`);
+      const r = await res.json();
+      const lista = document.getElementById('resultado');
+      if (!res.ok) { lista.innerHTML = ''; const li = document.createElement('li'); li.textContent = r.erro; lista.appendChild(li); return; }
+      lista.innerHTML = '';
+      for (const linha of [
+        `Publicadas: ${r.publicadas}`,
+        `Aceitas: ${r.aceitas}`,
+        `Coletadas: ${r.coletadas}`,
+        `Devolvidas: ${r.devolvidas}`,
+        `Tempo médio até a coleta: ${r.tempoMedioAteColeta}`,
+      ]) {
+        const li = document.createElement('li');
+        li.textContent = linha;
+        lista.appendChild(li);
+      }
+    }
+
     carregar();
     carregarAceitas();
     carregarMinhas();
     carregarIndicador();
+    carregarResultado();
   </script>
 </body>
 </html>
