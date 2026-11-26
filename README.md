@@ -62,6 +62,13 @@ rodam um de cada vez, porque compartilham o mesmo banco.
 
 Para abrir no celular, na mesma rede Wi-Fi: `http://<ip-do-computador>:3000`.
 
+**Sem Docker:** qualquer PostgreSQL 16 serve. Crie o usuário e o banco `pratocheio` e aponte
+a `DATABASE_URL` para ele, com a porta certa (um PostgreSQL instalado no Windows pode estar
+na 5432 ou na 5433). Dois erros vistos no teste do clone limpo:
+- `could not bind ... Permission denied`: a porta já está em uso por outro PostgreSQL; use outra.
+- `Execution of PostgreSQL by a user with administrative permissions is not permitted`: abra o
+  terminal sem "Executar como administrador".
+
 ## Definição de pronto
 
 Uma história só está pronta quando **todos** os itens abaixo são verdade — e cada um se confere sem perguntar a ninguém:
@@ -140,15 +147,20 @@ Os cinco critérios de aceite estão em `tests/doacoes.test.js` (6 de 6 testes
 passando) e escritos em Dado/Quando/Então em `docs/analise.md`.
 
 **Unidade 2 — projeto + incremento.** Documento de projeto em `docs/projeto.md`,
-ADRs em `docs/adr/`, diagramas em `docs/diagramas/`. Histórias novas, cada uma
-com testes em `tests/`:
+ADRs em `docs/adr/`, diagramas em `docs/diagramas/`.
+
+**Unidade 3 — produto evoluído + refatoração (Trabalho 3).** Produto sobre PostgreSQL
+(Refatoração 1), quatro histórias e a Refatoração 2 (`docs/refatoracoes.md`):
 
 | História | Rota |
 |---|---|
-| 4b — os testes só tocam o banco de teste (ADR 0002) | — (`src/db.js`) |
-| voluntário marca a doação como coletada | `POST /api/doacoes/:id/coletar`, `GET /api/doacoes/aceitas` |
-| doador cancela uma doação ainda disponível | `POST /api/doacoes/:id/cancelar` |
-| Marta vê quantas doações foram aceitas no mês | `GET /api/indicadores/aceitas-no-mes?mes=AAAA-MM` |
+| H1 · o doador acompanha as suas doações | `POST /api/doacoes` (com `doador`), `GET /api/doacoes/minhas?doador=` |
+| H2 · o voluntário confirma a coleta | `POST /api/doacoes/:id/coletar` `{ voluntario }`, `GET /api/doacoes/aceitas` |
+| H3 · a ONG devolve uma doação aceita | `POST /api/doacoes/:id/devolver` `{ ong, motivo }` |
+| H4 · a Marta vê o resultado do mês | `GET /api/indicadores/resultado-do-mes?mes=AAAA-MM` |
+| (U2) doador cancela · aceitas no mês | `POST /api/doacoes/:id/cancelar`, `GET /api/indicadores/aceitas-no-mes` |
+
+Validação em `docs/validacao.md`, roteiro em `docs/demo.md`, retrospectiva em `docs/retrospectivas/3.md`.
 
 ## Uso de IA
 

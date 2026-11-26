@@ -2,9 +2,7 @@
 
 *Trabalho 3 · confronto do produto com os critérios de aceite escritos na Unidade 1 e com os critérios de H1 a H4*
 
-Status: **atende**, **parcial**, **não atende** ou **não verificável**. A evidência é o nome do
-teste (`arquivo › nome do it`), o passo do roteiro (`docs/demo.md`) ou a execução do CI.
-CI de referência: aba *Actions*, job `build-e-testes`, no branch `entrega-3`.
+Evidência: teste (`arquivo › nome do it`), passo de `docs/demo.md` ou CI (job `build-e-testes`, branch `entrega-3`).
 
 ## Critérios de aceite da Análise (Unidade 1 — `docs/analise.md`, copiados como estão)
 
@@ -35,8 +33,44 @@ CI de referência: aba *Actions*, job `build-e-testes`, no branch `entrega-3`.
 
 ## Critérios que não atendem — por quê
 
+Nenhum critério ficou **parcial** ou **não atende**. O ponto fraco é de evidência:
+**H2-CA2, H2-CA3 e H3-CA2 passavam antes do código novo** (o `UPDATE` condicional já recusava).
+Para o H2-CA2, a prova de que o teste morde é a inversão de regra (2 vermelhos). Nos outros, o teste
+confere a mensagem e a linha no banco, não só o 400. "No celular" foi conferido em 375×812 e pelo roteiro.
+
 ## Mudanças de critério
+
+- **U1-2:** a publicação passou a exigir também o **doador** (H1-CA3). O critério segue valendo.
+- **"Aceite é definitivo" (RI-2 da U1)** caiu com a H3: a ONG devolve. A trava do U1-5 vale enquanto a doação está aceita.
+- **Coleta da U2** virou H2: agora guarda quem coletou. **H4-CA3** foi decidido na D11 (mês da publicação).
 
 ## Limitações do produto
 
+- **Identificação sem login:** doador, ONG e voluntário são o nome digitado (D8). Quem digitar
+  "Padaria Pão Bom" vê as doações dela, e quem digitar "Casa Esperança" pode devolver as doações
+  dela. Serve para o piloto de um bairro, não para crescer.
+- **ONG é texto livre:** "Casa Esperança" e "casa esperança" contam como a mesma ONG, mas um erro
+  de digitação cria outra.
+- **Sem envio offline (D5-B adiada):** com o sinal caindo, a ação se perde e o voluntário precisa
+  tocar de novo (a repetição é recusada sem estragar nada, NF1).
+- **Doações anteriores a H1 não têm doador** e não aparecem para ninguém em "Minhas doações" (D8).
+- **O resultado do mês é só na tela.** Não há exportação, e o número de um mês ainda muda nos
+  primeiros dias do mês seguinte, porque conta pela publicação (D11).
+
 ## Uso de IA
+
+**Ferramenta:** Claude Code (Claude Opus 5.5), como colaboradora. Ela gerou código, testes e
+rascunhos de cada história; o detalhe está no `## Uso de IA` de cada PR. O grupo verificou: na
+**iteração 0**, 19 verdes antes e depois, sem `expect` alterado; na **H1**, testes vermelhos antes;
+na **H2**, a inversão de regra; na **H3**, verde antes e depois da extração; na **H4**, o conversor
+de bigint removido de propósito (10 vermelhos).
+
+**Erros da IA que corrigimos:**
+1. **"0 h" para uma coleta de 2 minutos (H4):** os testes da IA usavam só horas cheias. A demo
+   mostrou o erro. Corrigido para minutos abaixo de 1 h, com um teste que ficou vermelho antes.
+2. **Tipo do banco (iteração 0):** `timestamptz` chegaria como `Date` e quebraria `não altera a
+   coleta quando a ação é repetida`. Consertado no `db.js`, abaixo do contrato.
+3. **Testes que passam sem conferir a regra** (H2-CA2, H3-CA2): reforçados como dito acima.
+
+**O que continua sendo do grupo:** as decisões D7 a D11, o corte das fatias, o esperado de cada
+caso limite e o status de cada linha deste quadro.

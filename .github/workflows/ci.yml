@@ -4,7 +4,7 @@ name: CI
 # O PR só deve ser integrado com este check verde.
 on:
   push:
-    branches: [main]
+    branches: [main, "entrega-*"]
   pull_request:
 
 jobs:
