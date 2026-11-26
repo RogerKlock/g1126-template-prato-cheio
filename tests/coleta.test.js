@@ -93,6 +93,7 @@ describe('migração do schema com dados reais', () => {
   // Quando o schema é migrado
   // Então a coluna nova aparece e a doação continua lá, intacta
   it('acrescenta a coluna nova sem apagar as doações existentes', async () => {
+    await query('DROP TABLE IF EXISTS devolucoes');
     await query('DROP TABLE doacoes');
     await query(`
       CREATE TABLE doacoes (
