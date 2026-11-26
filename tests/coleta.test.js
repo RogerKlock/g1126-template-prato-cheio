@@ -36,7 +36,7 @@ describe('voluntário marca a doação como coletada', () => {
   it('marca como coletada uma doação aceita e registra quando', async () => {
     const doacao = await publicarEAceitar();
 
-    const res = await request(app).post(`/api/doacoes/${doacao.id}/coletar`);
+    const res = await request(app).post(`/api/doacoes/${doacao.id}/coletar`).send({ voluntario: 'Rui' });
 
     expect(res.status).toBe(200);
     expect(res.body.status).toBe('coletada');
@@ -50,7 +50,7 @@ describe('voluntário marca a doação como coletada', () => {
   it('recusa coletar uma doação que ainda não foi aceita', async () => {
     const { body: doacao } = await request(app).post('/api/doacoes').send(doacaoValida);
 
-    const res = await request(app).post(`/api/doacoes/${doacao.id}/coletar`);
+    const res = await request(app).post(`/api/doacoes/${doacao.id}/coletar`).send({ voluntario: 'Rui' });
 
     expect(res.status).toBe(400);
     expect(res.body.erro).toMatch(/disponivel/);
@@ -63,9 +63,9 @@ describe('voluntário marca a doação como coletada', () => {
   // Então a repetição é recusada e a data da coleta não muda
   it('não altera a coleta quando a ação é repetida', async () => {
     const doacao = await publicarEAceitar();
-    const primeira = await request(app).post(`/api/doacoes/${doacao.id}/coletar`);
+    const primeira = await request(app).post(`/api/doacoes/${doacao.id}/coletar`).send({ voluntario: 'Rui' });
 
-    const repetida = await request(app).post(`/api/doacoes/${doacao.id}/coletar`);
+    const repetida = await request(app).post(`/api/doacoes/${doacao.id}/coletar`).send({ voluntario: 'Rui' });
 
     expect(repetida.status).toBe(400);
     expect(repetida.body.erro).toMatch(/já foi coletada/);
@@ -79,7 +79,7 @@ describe('voluntário marca a doação como coletada', () => {
   it('lista para o voluntário só as aceitas que ainda faltam buscar', async () => {
     const aBuscar = await publicarEAceitar();
     const jaColetada = await publicarEAceitar();
-    await request(app).post(`/api/doacoes/${jaColetada.id}/coletar`);
+    await request(app).post(`/api/doacoes/${jaColetada.id}/coletar`).send({ voluntario: 'Rui' });
 
     const res = await request(app).get('/api/doacoes/aceitas');
 

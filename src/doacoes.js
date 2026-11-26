@@ -67,15 +67,21 @@ export async function listarAceitas() {
   return repo.listarAceitas();
 }
 
-// "O voluntário marca a doação como coletada."
-// Só uma doação aceita pode ser coletada; repetir a ação não muda o registro.
-export async function marcarColetada(id) {
+// H2 — "o voluntário confirma a coleta".
+// Só uma doação aceita pode ser coletada; repetir a ação não muda o registro (D9).
+// O nome do voluntário é obrigatório: a ONG e a vigilância precisam saber quem buscou (R5).
+export async function marcarColetada(id, voluntario) {
+  const nome = String(voluntario ?? '').trim();
+  if (!nome) {
+    throw new Error('informe o nome do voluntário que buscou a doação');
+  }
+
   const doacao = await repo.buscarPorId(id);
   if (!doacao) {
     throw new Error('doação não encontrada');
   }
 
-  const coletada = await repo.marcarColetada(id);
+  const coletada = await repo.marcarColetada(id, nome);
   if (!coletada) {
     throw new Error(
       doacao.status === 'coletada'

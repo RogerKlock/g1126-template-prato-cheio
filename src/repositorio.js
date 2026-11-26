@@ -29,7 +29,10 @@ export async function listarDisponiveis() {
 // a H1) nunca casam com nenhum nome (D8).
 export async function listarDoDoador(doador) {
   const { rows } = await query(
-    `SELECT * FROM doacoes
+    // O nome do voluntário fica de fora: é dado pessoal que o doador não vê (D9).
+    `SELECT id, doador, tipo, quantidade, validade, status, ong,
+            criada_em, aceita_em, coletada_em
+     FROM doacoes
      WHERE lower(doador) = lower($1)
      ORDER BY criada_em DESC, id DESC`,
     [doador]
@@ -68,13 +71,13 @@ export async function aceitar(id, ong) {
 
 // Mesma trava do aceite: só sai de 'aceita' para 'coletada'. Se o celular do
 // voluntário reenviar a requisição, a segunda não encontra linha e nada muda.
-export async function marcarColetada(id) {
+export async function marcarColetada(id, voluntario) {
   const { rows } = await query(
     `UPDATE doacoes
-     SET status = 'coletada', coletada_em = now()
+     SET status = 'coletada', coletada_em = now(), voluntario = $2
      WHERE id = $1 AND status = 'aceita'
      RETURNING *`,
-    [id]
+    [id, voluntario]
   );
   return rows[0];
 }
