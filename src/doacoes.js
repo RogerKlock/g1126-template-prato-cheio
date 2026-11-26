@@ -109,7 +109,13 @@ async function aplicarTransicao(id, { escrever, recusa }) {
   const alterada = await escrever();
   if (alterada) return alterada;
 
-  const atual = (await repo.buscarPorId(id)) ?? doacao;
+  // Sem exclusão de doação no produto, a releitura só volta vazia se a linha
+  // sumir entre as duas leituras; nesse caso, o erro diz isso em vez de recusar
+  // com a situação antiga.
+  const atual = await repo.buscarPorId(id);
+  if (!atual) {
+    throw new Error('doação não encontrada');
+  }
   throw new Error(recusa(atual));
 }
 
