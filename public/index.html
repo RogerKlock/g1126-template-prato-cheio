@@ -21,6 +21,8 @@
 
   <fieldset>
     <legend>Publicar doação</legend>
+    <label for="doador">Seu nome ou do estabelecimento (doador)</label>
+    <input id="doador" placeholder="Ex.: Padaria Pão Bom" autocomplete="organization">
     <label for="tipo">Tipo de alimento</label>
     <input id="tipo" placeholder="Ex.: sopa, pão, frutas">
     <label for="quantidade">Quantidade</label>
@@ -30,6 +32,10 @@
     <button id="publicar">Publicar</button>
   </fieldset>
 
+  <h2>Minhas doações</h2>
+  <p><small>Mostra as doações publicadas com o nome de doador acima.</small></p>
+  <ul id="minhas"></ul>
+
   <h2>Doações disponíveis</h2>
   <ul id="lista"></ul>
 
@@ -37,6 +43,36 @@
   <ul id="aceitas"></ul>
 
   <script>
+    // H1: o doador se identifica pelo nome, guardado neste navegador (D8).
+    const campoDoador = document.getElementById('doador');
+    try { campoDoador.value = localStorage.getItem('doador') || ''; } catch {}
+    campoDoador.onchange = () => {
+      try { localStorage.setItem('doador', campoDoador.value.trim()); } catch {}
+      carregarMinhas();
+    };
+
+    const SITUACAO = {
+      disponivel: () => 'disponível — aguardando uma ONG',
+      aceita: (d) => `aceita por ${d.ong} — aguardando coleta`,
+      coletada: (d) => `coletada${d.ong ? ` por ${d.ong}` : ''}`,
+      cancelada: () => 'cancelada por você',
+    };
+
+    async function carregarMinhas() {
+      const lista = document.getElementById('minhas');
+      const doador = campoDoador.value.trim();
+      if (!doador) { lista.innerHTML = '<li>Digite o seu nome acima para ver as suas doações.</li>'; return; }
+      const res = await fetch(`/api/doacoes/minhas?doador=${encodeURIComponent(doador)}`);
+      const doacoes = await res.json();
+      lista.innerHTML = doacoes.length ? '' : '<li>Você ainda não publicou doações com este nome.</li>';
+      for (const d of doacoes) {
+        const li = document.createElement('li');
+        const situacao = (SITUACAO[d.status] || (() => d.status))(d);
+        li.textContent = `${d.tipo} — ${d.quantidade} (até ${d.validade}) · ${situacao}`;
+        lista.appendChild(li);
+      }
+    }
+
     async function carregarAceitas() {
       const res = await fetch('/api/doacoes/aceitas');
       const doacoes = await res.json();
@@ -79,6 +115,7 @@
           });
           carregar();
           carregarAceitas();
+          carregarMinhas();
           carregarIndicador();
         };
         li.appendChild(botao);
@@ -88,6 +125,7 @@
           if (!confirm(`Cancelar a doação de ${d.tipo}?`)) return;
           await fetch(`/api/doacoes/${d.id}/cancelar`, { method: 'POST' });
           carregar();
+          carregarMinhas();
         };
         li.appendChild(cancelar);
         lista.appendChild(li);
@@ -95,16 +133,20 @@
     }
 
     document.getElementById('publicar').onclick = async () => {
-      await fetch('/api/doacoes', {
+      try { localStorage.setItem('doador', campoDoador.value.trim()); } catch {}
+      const res = await fetch('/api/doacoes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          doador: campoDoador.value,
           tipo: document.getElementById('tipo').value,
           quantidade: document.getElementById('quantidade').value,
           validade: document.getElementById('validade').value
         })
       });
+      if (!res.ok) { alert((await res.json()).erro); return; }
       carregar();
+      carregarMinhas();
     };
 
     async function carregarIndicador() {
@@ -116,6 +158,7 @@
 
     carregar();
     carregarAceitas();
+    carregarMinhas();
     carregarIndicador();
   </script>
 </body>
