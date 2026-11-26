@@ -40,12 +40,15 @@
   <ul id="lista"></ul>
 
   <h2>Aceitas — aguardando coleta</h2>
+  <label for="voluntario">Seu nome (voluntário que vai buscar)</label>
+  <input id="voluntario" placeholder="Ex.: Rui" autocomplete="given-name">
   <ul id="aceitas"></ul>
 
   <script>
     // H1: o doador se identifica pelo nome, guardado neste navegador (D8).
     const campoDoador = document.getElementById('doador');
     try { campoDoador.value = localStorage.getItem('doador') || ''; } catch {}
+    try { document.getElementById('voluntario').value = localStorage.getItem('voluntario') || ''; } catch {}
     campoDoador.onchange = () => {
       try { localStorage.setItem('doador', campoDoador.value.trim()); } catch {}
       carregarMinhas();
@@ -84,11 +87,20 @@
         const li = document.createElement('li');
         li.textContent = `${d.tipo} — ${d.quantidade} (até ${d.validade}) · ${d.ong} `;
         const botao = document.createElement('button');
-        botao.textContent = 'Marcar coletada';
+        botao.textContent = 'Confirmar coleta';
         botao.onclick = async () => {
+          const voluntario = document.getElementById('voluntario').value.trim();
+          if (!voluntario) { alert('Digite o seu nome de voluntário antes de confirmar.'); return; }
+          try { localStorage.setItem('voluntario', voluntario); } catch {}
           botao.disabled = true; // evita o toque duplo com a conexão lenta
-          await fetch(`/api/doacoes/${d.id}/coletar`, { method: 'POST' });
+          const res = await fetch(`/api/doacoes/${d.id}/coletar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ voluntario })
+          });
+          if (!res.ok) alert((await res.json()).erro);
           carregarAceitas();
+          carregarMinhas();
         };
         li.appendChild(botao);
         lista.appendChild(li);
