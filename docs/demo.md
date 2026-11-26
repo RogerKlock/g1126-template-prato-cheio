@@ -39,6 +39,17 @@ comida foi buscada — e a Marta não tinha como mostrar se ela chega mais rápi
 4. **Resultado esperado:** *Minhas doações* mostra **"Você ainda não publicou doações com este nome."**
    Volte o nome para `Padaria Pão Bom`.
 
+### Passo 2 — A ONG aceita
+1. **Ação:** em *Doações disponíveis*, no item `Bolo`, toque **Aceitar**.
+2. **Resultado esperado:** `Bolo` sai de *Doações disponíveis*, aparece em *Aceitas — aguardando coleta*
+   e, em *Minhas doações*, passa a **"aceita por Minha ONG — aguardando coleta"**.
+
+### Passo 3 — H2 · O voluntário confirma a coleta
+1. **Ação:** em *Aceitas — aguardando coleta*, digite `Rui` no campo do voluntário e toque
+   **Confirmar coleta** no item `Bolo`.
+2. **Resultado esperado:** `Bolo` sai de *Aceitas*; em *Minhas doações* aparece **"coletada por Minha ONG"**
+   (o nome do voluntário não aparece para o doador — D9).
+
 ## Testado por
 
 Outro integrante executou este roteiro sem ajuda: **[nome]**, em **[data]**.

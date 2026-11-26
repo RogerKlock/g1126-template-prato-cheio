@@ -23,6 +23,9 @@ CI de referência: aba *Actions*, job `build-e-testes`, no branch `entrega-3`.
 | H1-CA1 | Dado que a "Padaria Pão Bom" publicou duas doações e a "Casa Esperança" aceitou uma delas, quando a padaria consulta as suas doações, então vê as duas: uma *disponível* e outra *aceita por Casa Esperança* | atende | `h1-doador.test.js › o doador vê as próprias doações com a situação de cada uma`; demo passos 1 e 2 |
 | H1-CA2 | Dado que outro doador publicou uma doação, quando a "Padaria Pão Bom" consulta as suas, então essa doação não aparece | atende | `h1-doador.test.js › a doação de outro doador não aparece nas doações do doador`; demo passo 1 (itens 3–4) |
 | H1-CA3 | Dado que o doador não é informado na publicação, quando a doação é enviada, então ela é recusada com uma mensagem clara e nada é gravado | atende | `h1-doador.test.js › recusa publicar doação sem o doador e não grava nada` |
+| H2-CA1 | Dado que a "Casa Esperança" aceitou uma doação, quando o voluntário "Rui" confirma a coleta, então ela passa a *coletada*, com o nome do voluntário e o horário da coleta | atende | `h2-coleta.test.js › a coleta confirmada grava o voluntário e o horário`; demo passo 3 |
+| H2-CA2 | Dado que a doação ainda está *disponível*, quando alguém tenta confirmar a coleta, então a confirmação é recusada com mensagem e a doação não muda | atende | `h2-coleta.test.js › recusa confirmar a coleta de uma doação ainda disponível e não a altera`; inversão de regra no PR da H2 (2 vermelhos) |
+| H2-CA3 | Dado que a doação foi coletada, quando o doador consulta as suas doações (H1), então ela aparece como *coletada* | atende | `h2-coleta.test.js › o doador vê a doação coletada nas suas doações`; demo passo 3 |
 
 ## Critérios que não atendem — por quê
 
