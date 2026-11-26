@@ -85,10 +85,20 @@ export async function cancelar(id) {
 
 // H3 — "a ONG devolve uma doação aceita".
 // A doação volta para a lista de disponíveis, sem ONG; o motivo fica registrado.
+// Só a ONG que aceitou pode devolver (CA3), e o motivo é obrigatório (D10).
 export async function devolver(id, ong, motivo) {
+  const quem = String(ong ?? '').trim();
+  const porque = String(motivo ?? '').trim();
+  if (!porque) {
+    throw new Error('informe o motivo da devolução');
+  }
+
   return aplicarTransicao(id, {
-    escrever: () => repo.devolver(id, ong, motivo),
-    recusa: (atual) => `doação não pode ser devolvida: está ${atual.status}`,
+    escrever: () => repo.devolver(id, quem, porque),
+    recusa: (atual) =>
+      atual.status === 'aceita'
+        ? `doação foi aceita por ${atual.ong}; só ${atual.ong} pode devolvê-la`
+        : `doação não pode ser devolvida: está ${atual.status}`,
   });
 }
 

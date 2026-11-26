@@ -48,3 +48,66 @@ describe('H3 · a ONG devolve uma doação aceita', () => {
     expect(rows).toEqual([{ doacao_id: doacao.id, ong: 'Casa Esperança', motivo: 'sem voluntário hoje' }]);
   });
 });
+
+describe('H3 · regras da devolução', () => {
+  // CA2. Dado que a doação já foi coletada, quando a ONG tenta devolvê-la, então a
+  // devolução é recusada com mensagem.
+  it('recusa devolver uma doação já coletada', async () => {
+    const doacao = await publicarEAceitar();
+    await request(app).post(`/api/doacoes/${doacao.id}/coletar`).send({ voluntario: 'Rui' });
+
+    const res = await devolver(doacao.id, 'Casa Esperança', 'sem voluntário hoje');
+
+    expect(res.status).toBe(400);
+    expect(res.body.erro).toMatch(/não pode ser devolvida: está coletada/);
+    const { rows } = await query('SELECT status, ong FROM doacoes WHERE id = $1', [doacao.id]);
+    expect(rows[0]).toEqual({ status: 'coletada', ong: 'Casa Esperança' });
+  });
+
+  // CA3. Dado que a "Casa Esperança" aceitou a doação, quando outra ONG tenta
+  // devolvê-la, então a devolução é recusada e a doação continua aceita pela
+  // Casa Esperança.
+  it('recusa a devolução feita por outra ONG e a doação continua com quem aceitou', async () => {
+    const doacao = await publicarEAceitar('Casa Esperança');
+
+    const res = await devolver(doacao.id, 'Lar Esperança', 'engano');
+
+    expect(res.status).toBe(400);
+    expect(res.body.erro).toMatch(/só Casa Esperança pode devolvê-la/);
+    const { body: aceitas } = await request(app).get('/api/doacoes/aceitas');
+    expect(aceitas).toEqual([expect.objectContaining({ id: doacao.id, status: 'aceita', ong: 'Casa Esperança' })]);
+    const { rows } = await query('SELECT count(*) AS n FROM devolucoes');
+    expect(rows[0].n).toBe(0);
+  });
+
+  // Decisão do grupo (D10): o motivo é obrigatório.
+  it('recusa devolver sem motivo e a doação continua aceita', async () => {
+    const doacao = await publicarEAceitar();
+
+    const res = await devolver(doacao.id, 'Casa Esperança', '  ');
+
+    expect(res.status).toBe(400);
+    expect(res.body.erro).toMatch(/motivo/);
+    const { rows } = await query('SELECT status FROM doacoes WHERE id = $1', [doacao.id]);
+    expect(rows[0].status).toBe('aceita');
+  });
+
+  // Decisão do grupo (D10): a ONG que devolveu pode aceitar a mesma doação de novo.
+  it('a ONG que devolveu pode aceitar a mesma doação de novo', async () => {
+    const doacao = await publicarEAceitar('Casa Esperança');
+    await devolver(doacao.id, 'Casa Esperança', 'sem voluntário hoje');
+
+    const res = await request(app).post(`/api/doacoes/${doacao.id}/aceitar`).send({ ong: 'Casa Esperança' });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ status: 'aceita', ong: 'Casa Esperança' });
+  });
+
+  // Erro: devolver uma doação que não existe.
+  it('recusa devolver uma doação que não existe', async () => {
+    const res = await devolver(999999, 'Casa Esperança', 'sem voluntário hoje');
+
+    expect(res.status).toBe(400);
+    expect(res.body.erro).toMatch(/não encontrada/);
+  });
+});

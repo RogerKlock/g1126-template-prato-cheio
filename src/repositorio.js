@@ -107,15 +107,15 @@ export async function contarAceitasNoMes(mes) {
   return rows[0].aceitas;
 }
 
-// H3: só sai de 'aceita' para 'disponivel', e a doação volta sem ONG e sem data
-// de aceite. O registro da devolução entra no mesmo comando: ou as duas coisas
+// H3: só sai de 'aceita' para 'disponivel', só pela ONG que aceitou (CA3), e a
+// doação volta sem ONG e sem data de aceite. O registro da devolução entra no mesmo comando: ou as duas coisas
 // acontecem, ou nenhuma.
 export async function devolver(id, ong, motivo) {
   const { rows } = await query(
     `WITH devolvida AS (
        UPDATE doacoes
        SET status = 'disponivel', ong = NULL, aceita_em = NULL
-       WHERE id = $1 AND status = 'aceita'
+       WHERE id = $1 AND status = 'aceita' AND lower(ong) = lower($2)
        RETURNING *
      ), registro AS (
        INSERT INTO devolucoes (doacao_id, ong, motivo)
