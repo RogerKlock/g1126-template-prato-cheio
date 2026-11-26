@@ -109,6 +109,22 @@ export async function cancelar(id) {
   return cancelada;
 }
 
+// H3 — "a ONG devolve uma doação aceita".
+// A doação volta para a lista de disponíveis, sem ONG; o motivo fica registrado.
+export async function devolver(id, ong, motivo) {
+  const doacao = await repo.buscarPorId(id);
+  if (!doacao) {
+    throw new Error('doação não encontrada');
+  }
+
+  const devolvida = await repo.devolver(id, ong, motivo);
+  if (!devolvida) {
+    throw new Error(`doação não pode ser devolvida: está ${doacao.status}`);
+  }
+
+  return devolvida;
+}
+
 // "A Marta vê quantas doações foram aceitas no mês."
 // Conta toda doação aceita no mês, mesmo que já tenha sido coletada depois.
 export async function aceitasNoMes(mes = mesAtual()) {
