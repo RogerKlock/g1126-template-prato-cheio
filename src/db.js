@@ -1,100 +1,112 @@
-// Conexão com o banco. Já vem pronto — não precisa mexer agora.
+// Conexão com o banco — PostgreSQL (Unidade 3, Refatoração 1, ADR 0001).
 //
-// UNIDADE 1: SQLite, embutido no Node (módulo `node:sqlite`) — nada para instalar.
-// UNIDADE 3: este arquivo será refatorado para PostgreSQL. A interface abaixo
-//            (`query` devolvendo `{ rows }`) foi desenhada para que a troca fique
-//            contida aqui, sem espalhar mudança pelo resto do código.
-// `node:sqlite` é módulo embutido do Node 22+. Carregado via createRequire porque
-// algumas ferramentas (como o Vite/Vitest) ainda não o reconhecem como embutido.
-import { createRequire } from 'node:module';
-const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite');
+// O contrato com o resto do código continua o mesmo da Unidade 1:
+// `query(sql, valores)` devolve `{ rows }`. Tudo o que é próprio do PostgreSQL
+// (pool de conexões, tipos que o driver devolve, fuso horário) fica contido aqui.
+import pg from 'pg';
 
 // O banco dos testes. Sob o Vitest é sempre este, seja qual for a configuração:
-// nem DATABASE_FILE nem outro vitest.config trocam o banco dos testes pelo banco
-// real (ADR 0002). Fora do Vitest vale DATABASE_FILE, e o padrão é o arquivo local.
-export const BANCO_DE_TESTE = ':memory:';
+// a DATABASE_URL só informa servidor, usuário e senha — o nome do banco é
+// trocado por este (ADR 0002, revisão do ADR 0001). Fora do Vitest vale a
+// DATABASE_URL inteira.
+export const BANCO_DE_TESTE = 'pratocheio_teste';
 
-function arquivoDoBanco() {
-  if (process.env.VITEST) return BANCO_DE_TESTE;
-  return process.env.DATABASE_FILE || 'dados.sqlite';
+const URL_PADRAO = 'postgres://pratocheio:pratocheio@localhost:5432/pratocheio';
+
+/** A URL de conexão que este processo usa. */
+export function urlDoBanco() {
+  const url = new URL(process.env.DATABASE_URL || URL_PADRAO);
+  if (process.env.VITEST) url.pathname = `/${BANCO_DE_TESTE}`;
+  return url.toString();
 }
 
-let db;
-let arquivoAberto;
+// ---------------------------------------------------------------------------
+// Tipos que o PostgreSQL devolve e o JavaScript não espera. O conserto fica
+// aqui, abaixo do contrato — nunca em src/doacoes.js nem nos testes.
+//  - count(*) é bigint (OID 20) e o driver devolve texto ("2"), não número.
+//  - avg() e round() devolvem numeric (OID 1700), também como texto.
+//  - timestamptz (OID 1184) viria como objeto Date; devolvemos o texto ISO,
+//    o mesmo formato que a API manda em JSON.
+// ---------------------------------------------------------------------------
+pg.types.setTypeParser(20, (texto) => Number(texto));
+pg.types.setTypeParser(1700, (texto) => Number(texto));
+pg.types.setTypeParser(1184, (texto) =>
+  new Date(texto.replace(' ', 'T').replace(/([+-]\d\d)$/, '$1:00')).toISOString()
+);
+
+// O SQLite contava o mês no fuso da máquina ('localtime'). Para o comportamento
+// não mudar, a sessão do PostgreSQL usa o mesmo fuso do processo Node.
+const FUSO = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+
+let pool;
+let bancoAberto;
 
 export function conexao() {
-  if (!db) {
-    arquivoAberto = arquivoDoBanco();
-    db = new DatabaseSync(arquivoAberto);
+  if (!pool) {
+    const url = urlDoBanco();
+    bancoAberto = decodeURIComponent(new URL(url).pathname.slice(1));
+    pool = new pg.Pool({ connectionString: url, options: `-c timezone=${FUSO}` });
   }
-  return db;
+  return pool;
 }
 
 /** Qual banco esta conexão usa (ou usaria, se ainda não foi aberta). */
 export function bancoEmUso() {
-  return arquivoAberto ?? arquivoDoBanco();
+  return bancoAberto ?? decodeURIComponent(new URL(urlDoBanco()).pathname.slice(1));
 }
 
 /**
  * Executa uma consulta e devolve { rows }.
- * Use `?` como marcador de parâmetro (evita injeção de SQL):
- *   query('SELECT * FROM doacoes WHERE id = ?', [id])
+ * Use `$1, $2…` como marcador de parâmetro (evita injeção de SQL):
+ *   query('SELECT * FROM doacoes WHERE id = $1', [id])
  */
 export async function query(sql, valores = []) {
-  const stmt = conexao().prepare(sql);
-  const ehLeitura = /^\s*(select|with)/i.test(sql) || /returning/i.test(sql);
-  if (ehLeitura) return { rows: stmt.all(...valores) };
-  const info = stmt.run(...valores);
-  return { rows: [], alteradas: info.changes };
+  const resultado = await conexao().query(sql, valores);
+  return { rows: resultado.rows, alteradas: resultado.rowCount };
 }
 
 // Colunas acrescentadas depois que o piloto já tinha doações reais.
 // `CREATE TABLE IF NOT EXISTS` não mexe numa tabela que já existe, então cada uma
-// entra por `ALTER TABLE ... ADD COLUMN`, só se ainda faltar: nenhum dado é apagado.
+// entra por `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`: nenhum dado é apagado.
 const COLUNAS_ACRESCENTADAS = {
-  coletada_em: 'TEXT',
-  aceita_em: 'TEXT',
+  coletada_em: 'TIMESTAMPTZ',
+  aceita_em: 'TIMESTAMPTZ',
 };
 
 /** Cria o schema, se ainda não existir. Rodado por `npm run db:migrar` e ao subir o servidor. */
 export async function migrar() {
-  conexao().exec(`
+  await query(`
     CREATE TABLE IF NOT EXISTS doacoes (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      id          INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
       tipo        TEXT NOT NULL,
       quantidade  TEXT NOT NULL,
       validade    TEXT NOT NULL,
       status      TEXT NOT NULL DEFAULT 'disponivel',
       ong         TEXT,
-      criada_em   TEXT NOT NULL DEFAULT (datetime('now'))
+      criada_em   TIMESTAMPTZ NOT NULL DEFAULT now()
     )
   `);
-
-  const existentes = new Set(
-    conexao().prepare('PRAGMA table_info(doacoes)').all().map((coluna) => coluna.name)
-  );
   for (const [coluna, tipo] of Object.entries(COLUNAS_ACRESCENTADAS)) {
-    if (!existentes.has(coluna)) {
-      conexao().exec(`ALTER TABLE doacoes ADD COLUMN ${coluna} ${tipo}`);
-    }
+    await query(`ALTER TABLE doacoes ADD COLUMN IF NOT EXISTS ${coluna} ${tipo}`);
   }
 }
 
 /**
  * Apaga todos os dados. Usado pelos testes.
- * Recusa, antes de apagar qualquer linha, quando o banco aberto não é o de teste:
- * foi assim que o piloto perdeu as doações reais (ADR 0002).
+ * Recusa, antes de apagar qualquer linha, quando o banco conectado não é o de
+ * teste: foi assim que o piloto perdeu as doações reais (ADR 0002). Quem
+ * responde é o próprio servidor (`current_database()`), não a configuração.
  */
 export async function limparBanco() {
-  conexao();
-  if (arquivoAberto !== BANCO_DE_TESTE) {
+  const { rows } = await query('SELECT current_database() AS banco');
+  if (rows[0].banco !== BANCO_DE_TESTE) {
     throw new Error(
-      `limparBanco recusado: o banco em uso é "${arquivoAberto}", não o banco de teste (${BANCO_DE_TESTE})`
+      `limparBanco recusado: o banco em uso é "${rows[0].banco}", não o banco de teste (${BANCO_DE_TESTE})`
     );
   }
-  conexao().exec('DELETE FROM doacoes');
+  await query('TRUNCATE doacoes RESTART IDENTITY');
 }
 
 export async function encerrar() {
-  if (db) { db.close(); db = undefined; }
+  if (pool) { await pool.end(); pool = undefined; bancoAberto = undefined; }
 }

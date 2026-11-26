@@ -1,14 +1,14 @@
 // Camada de dados do Prato Cheio — acesso ao banco.
 // A conexão e o schema já estão prontos em src/db.js.
 //
-// Marcador de parâmetro é `?` (SQL parametrizado evita injeção):
-//   const { rows } = await query('SELECT * FROM doacoes WHERE id = ?', [id]);
+// Marcador de parâmetro é `$1, $2…` (PostgreSQL; SQL parametrizado evita injeção):
+//   const { rows } = await query('SELECT * FROM doacoes WHERE id = $1', [id]);
 import { query } from './db.js';
 
 export async function inserir({ tipo, quantidade, validade }) {
   const { rows } = await query(
     `INSERT INTO doacoes (tipo, quantidade, validade)
-     VALUES (?, ?, ?)
+     VALUES ($1, $2, $3)
      RETURNING *`,
     [tipo, quantidade, validade]
   );
@@ -34,7 +34,7 @@ export async function listarAceitas() {
 }
 
 export async function buscarPorId(id) {
-  const { rows } = await query('SELECT * FROM doacoes WHERE id = ?', [id]);
+  const { rows } = await query('SELECT * FROM doacoes WHERE id = $1', [id]);
   return rows[0];
 }
 
@@ -45,8 +45,8 @@ export async function buscarPorId(id) {
 export async function aceitar(id, ong) {
   const { rows } = await query(
     `UPDATE doacoes
-     SET status = 'aceita', ong = ?, aceita_em = datetime('now')
-     WHERE id = ? AND status = 'disponivel'
+     SET status = 'aceita', ong = $1, aceita_em = now()
+     WHERE id = $2 AND status = 'disponivel'
      RETURNING *`,
     [ong, id]
   );
@@ -58,8 +58,8 @@ export async function aceitar(id, ong) {
 export async function marcarColetada(id) {
   const { rows } = await query(
     `UPDATE doacoes
-     SET status = 'coletada', coletada_em = datetime('now')
-     WHERE id = ? AND status = 'aceita'
+     SET status = 'coletada', coletada_em = now()
+     WHERE id = $1 AND status = 'aceita'
      RETURNING *`,
     [id]
   );
@@ -72,20 +72,20 @@ export async function cancelar(id) {
   const { rows } = await query(
     `UPDATE doacoes
      SET status = 'cancelada'
-     WHERE id = ? AND status = 'disponivel'
+     WHERE id = $1 AND status = 'disponivel'
      RETURNING *`,
     [id]
   );
   return rows[0];
 }
 
-// Datas são gravadas em UTC (`datetime('now')`); o mês é contado no fuso da
-// máquina do piloto, que é o mês que a Marta enxerga.
+// Datas são gravadas como timestamptz (`now()`); o mês é contado no fuso da
+// sessão, que o src/db.js iguala ao da máquina do piloto — o mês que a Marta enxerga.
 export async function contarAceitasNoMes(mes) {
   const { rows } = await query(
     `SELECT count(*) AS aceitas FROM doacoes
      WHERE aceita_em IS NOT NULL
-       AND strftime('%Y-%m', aceita_em, 'localtime') = ?`,
+       AND to_char(aceita_em, 'YYYY-MM') = $1`,
     [mes]
   );
   return rows[0].aceitas;

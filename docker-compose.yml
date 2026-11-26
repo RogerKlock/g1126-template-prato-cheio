@@ -1,0 +1,21 @@
+# PostgreSQL do Prato Cheio para desenvolvimento (ADR 0001: contêiner, mesma versão do CI).
+# Subir: docker compose up -d   ·   Derrubar: docker compose down
+# Os dados ficam no volume `pratocheio-dados` e sobrevivem ao `down` (só `down -v` apaga).
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: pratocheio
+      POSTGRES_PASSWORD: pratocheio   # senha só de desenvolvimento; no piloto use outra
+      POSTGRES_DB: pratocheio
+    ports:
+      - "5432:5432"
+    volumes:
+      - pratocheio-dados:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pratocheio"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  pratocheio-dados:
