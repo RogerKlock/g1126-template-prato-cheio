@@ -132,12 +132,13 @@ export async function aceitasNoMes(mes = mesAtual()) {
 
 // H4 — "a Marta vê o resultado do mês".
 // Cada doação conta no mês em que foi publicada (D11). O tempo médio vai da
-// publicação até a coleta, em horas com uma casa decimal; sem coletas no mês,
-// ele não é zero: é "sem coletas no mês".
+// publicação até a coleta, em horas com uma casa decimal (abaixo de 1 h, em
+// minutos); sem coletas no mês, ele não é zero: é "sem coletas no mês".
 export async function resultadoDoMes(mes = mesAtual()) {
   validarMes(mes);
   const r = await repo.resultadoDoMes(mes);
   const horas = r.tempo_medio_horas;
+  const minutos = r.tempo_medio_minutos;
   return {
     mes,
     publicadas: r.publicadas,
@@ -146,7 +147,11 @@ export async function resultadoDoMes(mes = mesAtual()) {
     devolvidas: r.devolvidas,
     tempoMedioAteColetaHoras: horas,
     tempoMedioAteColeta:
-      horas === null ? 'sem coletas no mês' : `${String(horas).replace('.', ',')} h`,
+      horas === null
+        ? 'sem coletas no mês'
+        : minutos < 60
+          ? `${minutos} min`
+          : `${String(horas).replace('.', ',')} h`,
   };
 }
 

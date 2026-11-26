@@ -143,7 +143,10 @@ export async function resultadoDoMes(mes) {
        round(
          avg(extract(epoch FROM coletada_em - criada_em)) FILTER (WHERE status = 'coletada') / 3600,
          1
-       ) AS tempo_medio_horas
+       ) AS tempo_medio_horas,
+       round(
+         avg(extract(epoch FROM coletada_em - criada_em)) FILTER (WHERE status = 'coletada') / 60
+       ) AS tempo_medio_minutos
      FROM doacoes
      WHERE to_char(criada_em, 'YYYY-MM') = $1`,
     [mes]

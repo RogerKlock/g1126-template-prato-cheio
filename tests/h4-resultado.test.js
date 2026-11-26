@@ -116,6 +116,18 @@ describe('H4 · a Marta vê o resultado do mês', () => {
     expect(res.body).toMatchObject({ coletadas: 2, tempoMedioAteColetaHoras: 1.3, tempoMedioAteColeta: '1,3 h' });
   });
 
+  // Decisão do grupo (D11): abaixo de 1 h, o tempo aparece em minutos — "0 h"
+  // pareceria que nada foi coletado (achado na demo, ver Uso de IA).
+  it('mostra o tempo médio em minutos quando ele fica abaixo de 1 hora', async () => {
+    const a = await publicadaEm('2026-11-07 08:00:00-03');
+    await aceitar(a.id);
+    await coletadaEm(a.id, '2026-11-07 08:40:00-03');
+
+    const res = await resultado('2026-11');
+
+    expect(res.body).toMatchObject({ coletadas: 1, tempoMedioAteColetaHoras: 0.7, tempoMedioAteColeta: '40 min' });
+  });
+
   // Decisão do grupo (D11): a doação devolvida (H3) e não aceita de novo não conta
   // como aceita; a devolução aparece no número de devolvidas.
   it('a devolvida não conta como aceita e entra nas devolvidas', async () => {
