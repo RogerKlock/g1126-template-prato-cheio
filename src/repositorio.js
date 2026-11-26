@@ -5,12 +5,12 @@
 //   const { rows } = await query('SELECT * FROM doacoes WHERE id = $1', [id]);
 import { query } from './db.js';
 
-export async function inserir({ tipo, quantidade, validade }) {
+export async function inserir({ doador, tipo, quantidade, validade }) {
   const { rows } = await query(
-    `INSERT INTO doacoes (tipo, quantidade, validade)
-     VALUES ($1, $2, $3)
+    `INSERT INTO doacoes (doador, tipo, quantidade, validade)
+     VALUES ($1, $2, $3, $4)
      RETURNING *`,
-    [tipo, quantidade, validade]
+    [doador, tipo, quantidade, validade]
   );
   return rows[0];
 }
@@ -20,6 +20,19 @@ export async function listarDisponiveis() {
     `SELECT * FROM doacoes
      WHERE status = 'disponivel'
      ORDER BY criada_em, id`
+  );
+  return rows;
+}
+
+// H1: todas as doações de um doador, em qualquer situação, as mais novas primeiro.
+// O nome é comparado sem diferenciar maiúsculas; doações sem doador (anteriores
+// a H1) nunca casam com nenhum nome (D8).
+export async function listarDoDoador(doador) {
+  const { rows } = await query(
+    `SELECT * FROM doacoes
+     WHERE lower(doador) = lower($1)
+     ORDER BY criada_em DESC, id DESC`,
+    [doador]
   );
   return rows;
 }

@@ -15,6 +15,7 @@ afterAll(async () => {
 });
 
 const doacaoValida = {
+  doador: 'Padaria Pão Bom',
   tipo: 'Pão',
   quantidade: '5 kg',
   validade: '2026-10-30',

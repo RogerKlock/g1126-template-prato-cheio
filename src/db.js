@@ -71,6 +71,7 @@ export async function query(sql, valores = []) {
 const COLUNAS_ACRESCENTADAS = {
   coletada_em: 'TIMESTAMPTZ',
   aceita_em: 'TIMESTAMPTZ',
+  doador: 'TEXT', // H1: doações anteriores ficam sem doador (NULL) — decisão D8
 };
 
 /** Cria o schema, se ainda não existir. Rodado por `npm run db:migrar` e ao subir o servidor. */

@@ -17,6 +17,7 @@ afterAll(async () => {
 
 // Doação de exemplo. Cada teste sobrescreve só o campo que lhe interessa.
 const doacaoValida = {
+  doador: 'Padaria Pão Bom',
   tipo: 'Sopa',
   quantidade: '10 porções',
   validade: '2026-09-30',

@@ -1,12 +1,13 @@
 // Regras de negócio das doações.
 import * as repo from './repositorio.js';
 
-const CAMPOS_OBRIGATORIOS = ['tipo', 'quantidade', 'validade'];
+const CAMPOS_OBRIGATORIOS = ['doador', 'tipo', 'quantidade', 'validade'];
 
 // História zero — "um doador publica uma doação".
 // Critério: tipo, quantidade e validade são obrigatórios.
-export async function criarDoacao({ tipo, quantidade, validade }) {
-  const doacao = { tipo, quantidade, validade };
+// H1 (CA3): o doador também é — sem ele, ninguém consegue acompanhar a doação.
+export async function criarDoacao({ doador, tipo, quantidade, validade }) {
+  const doacao = { doador: normalizarDoador(doador), tipo, quantidade, validade };
 
   const faltando = CAMPOS_OBRIGATORIOS.filter(
     (campo) => String(doacao[campo] ?? '').trim() === ''
@@ -44,6 +45,21 @@ export async function aceitar(id, ong) {
   }
 
   return aceita;
+}
+
+// H1 — "o doador acompanha as suas doações".
+// O doador se identifica pelo nome digitado (D8): sem login, o nome é a chave.
+export async function doacoesDoDoador(doador) {
+  const nome = normalizarDoador(doador);
+  if (!nome) {
+    throw new Error('informe o doador para ver as suas doações');
+  }
+  return repo.listarDoDoador(nome);
+}
+
+// Espaços nas pontas e espaços repetidos não criam outro doador.
+function normalizarDoador(doador) {
+  return String(doador ?? '').trim().replace(/\s+/g, ' ');
 }
 
 // "O voluntário vê as doações aceitas que precisa buscar."
