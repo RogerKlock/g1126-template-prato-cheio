@@ -98,15 +98,15 @@ export async function devolver(id, ong, motivo) {
 // na situação de origem (o banco decide — D1). Se a escrita não alterou nada,
 // a transição não é permitida: relê a doação, porque a situação pode ter mudado
 // entre a leitura e a escrita, e recusa com a mensagem própria da operação.
-//   escrever(doacao) → a doação alterada, ou undefined se a transição foi recusada
-//   recusa(atual)    → a mensagem de erro, a partir da situação atual
+//   escrever()    → a doação alterada, ou undefined se a transição foi recusada
+//   recusa(atual) → a mensagem de erro, a partir da situação atual
 async function aplicarTransicao(id, { escrever, recusa }) {
   const doacao = await repo.buscarPorId(id);
   if (!doacao) {
     throw new Error('doação não encontrada');
   }
 
-  const alterada = await escrever(doacao);
+  const alterada = await escrever();
   if (alterada) return alterada;
 
   const atual = (await repo.buscarPorId(id)) ?? doacao;
