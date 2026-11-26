@@ -45,7 +45,7 @@ describe('Marta vê quantas doações foram aceitas no mês', () => {
     await publicar();
     await aceitar(a.id);
     await aceitar(b.id);
-    await request(app).post(`/api/doacoes/${b.id}/coletar`);
+    await request(app).post(`/api/doacoes/${b.id}/coletar`).send({ voluntario: 'Rui' });
 
     const res = await request(app).get('/api/indicadores/aceitas-no-mes');
 
