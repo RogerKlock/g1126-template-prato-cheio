@@ -78,7 +78,7 @@ digitado (qualquer um que digite o nome vê e age), não há envio offline e a M
 
 ## Testado por
 
-Outro integrante executou este roteiro sem ajuda: **[nome]**, em **[data]**.
+Outro integrante executou este roteiro sem ajuda: **Roger Klock**, em **26/11/2026**, num clone limpo da `fechamento/entrega-3`. Os passos 1 a 7 deram o resultado esperado.
 Se ele travou em algum passo, o roteiro está incompleto — corrija antes de entregar.
 
-- **O que mudou depois do teste:** *(preencher)*
+- **O que mudou depois do teste:** o roteiro bateu, mas subir o produto travou duas vezes antes do passo 1: a máquina não tinha Docker, e o PostgreSQL local já ocupava outra porta. O teste foi feito com um PostgreSQL 16 sem Docker, e o README ganhou "Sem Docker", com o caminho e os dois erros que apareceram.

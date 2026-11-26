@@ -62,6 +62,13 @@ rodam um de cada vez, porque compartilham o mesmo banco.
 
 Para abrir no celular, na mesma rede Wi-Fi: `http://<ip-do-computador>:3000`.
 
+**Sem Docker:** qualquer PostgreSQL 16 serve. Crie o usuário e o banco `pratocheio` e aponte
+a `DATABASE_URL` para ele, com a porta certa (um PostgreSQL instalado no Windows pode estar
+na 5432 ou na 5433). Dois erros vistos no teste do clone limpo:
+- `could not bind ... Permission denied`: a porta já está em uso por outro PostgreSQL; use outra.
+- `Execution of PostgreSQL by a user with administrative permissions is not permitted`: abra o
+  terminal sem "Executar como administrador".
+
 ## Definição de pronto
 
 Uma história só está pronta quando **todos** os itens abaixo são verdade — e cada um se confere sem perguntar a ninguém:
