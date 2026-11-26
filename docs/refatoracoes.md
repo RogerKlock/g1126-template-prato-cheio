@@ -30,13 +30,37 @@
   - testes depois da mudança (PostgreSQL 16): **19 passando** (5 arquivos)
   - link da execução do CI verde (PostgreSQL, PR #8): https://github.com/RogerKlock/g1126-template-prato-cheio/actions/runs/45857870069
 
-## Refatoração 2 — (nome)
+## Refatoração 2 — Extrair `aplicarTransicao` das mudanças de situação
 
-- **Cheiro de código atacado:** (duplicação, função longa, nome que engana, regra na rota…)
-- **Qual dor concreta isso resolvia:**
-- **O que mudou:**
+- **Cheiro de código atacado:** **duplicação**. Com a fatia 1 da H3, quatro operações de
+  `src/doacoes.js` — `aceitar`, `marcarColetada`, `cancelar` e `devolver` — começavam do
+  mesmo jeito: buscar a doação, recusar se ela não existe, tentar o `UPDATE` condicional
+  e, se ele não alterou nada, montar a recusa a partir da situação. Era a terceira
+  repetição de aceitar/coletar (a regra de três da Aula 12) — `devolver` entrou copiado de
+  propósito, com o teste verde, no PR da fatia 1.
+- **Qual dor concreta isso resolvia:** as fatias seguintes da H3 iam acrescentar mais
+  regras dentro de uma quarta cópia (a ONG que aceitou, o motivo obrigatório), e as cópias
+  já tinham divergido: `aceitar` relia a doação depois de uma recusa (para não culpar
+  "outra ONG" por uma doação cancelada — o erro corrigido na U2), mas `marcarColetada`,
+  `cancelar` e `devolver` montavam a mensagem com a leitura velha. Uma correção num lugar
+  não chegava aos outros.
+- **O que mudou:** `src/doacoes.js` ganhou `aplicarTransicao(id, { escrever, recusa })`,
+  que faz o começo comum e sempre relê antes de recusar; cada operação passou a dizer só o
+  que escreve e que mensagem dá. `repositorio.js`, `app.js` e os testes **não** mudaram.
+  `src/doacoes.js`: 36 linhas entraram, 48 saíram.
 - **Evidência (testes verdes antes e depois):**
+  - antes (fatia 1 da H3, com a terceira cópia): **32 passando** — CI do PR da fatia 1:
+    https://github.com/RogerKlock/g1126-template-prato-cheio/actions/runs/45859266280
+  - depois (só a extração, nenhum teste alterado): **32 passando** — CI do PR da Refatoração 2
+  - as fatias seguintes da H3 (CA2, CA3, motivo) já entraram usando `aplicarTransicao`.
+- Revisão: https://github.com/RogerKlock/g1126-template-prato-cheio/pull/12
 
 ---
 
-**Limitações e o que ficou de fora:** (o que vocês viram e decidiram não refatorar, e por quê)
+**Limitações e o que ficou de fora:**
+- `src/app.js` repete o mesmo `try { … } catch → 400` em todas as rotas. Vimos e não
+  extraímos: cada rota tem 5 linhas, nenhuma mudança da U3 doeu por causa disso, e um
+  middleware de erro mudaria o código HTTP de erros inesperados (hoje tudo é 400).
+- Os testes repetem `publicar()` e `publicarEAceitar()` em cada arquivo. Ficou assim para
+  cada arquivo ler sozinho o seu `Dado`; o custo apareceu quando o doador ficou obrigatório
+  (5 arquivos de fixture mudaram) e é o próximo candidato.
