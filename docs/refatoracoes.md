@@ -28,7 +28,7 @@
   - testes antes da mudança (SQLite, `main` em `0ce2a3b`): **19 passando** (5 arquivos) —
     CI: https://github.com/RogerKlock/g1126-template-prato-cheio/actions/runs/39832291225
   - testes depois da mudança (PostgreSQL 16): **19 passando** (5 arquivos)
-  - link da execução do CI verde: *(preenchido no commit seguinte, com o link do PR)*
+  - link da execução do CI verde (PostgreSQL, PR #8): https://github.com/RogerKlock/g1126-template-prato-cheio/actions/runs/45857870069
 
 ## Refatoração 2 — (nome)
 
