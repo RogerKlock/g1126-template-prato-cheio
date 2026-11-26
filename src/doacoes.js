@@ -27,24 +27,13 @@ export async function listarDisponiveis() {
 // História zero — "uma ONG aceita uma doação".
 // Regra do caso: uma doação aceita não fica disponível para outra ONG.
 export async function aceitar(id, ong) {
-  const doacao = await repo.buscarPorId(id);
-  if (!doacao) {
-    throw new Error('doação não encontrada');
-  }
-
-  // `repo.aceitar` devolve undefined quando a doação deixou de estar
-  // disponível entre esta verificação e a escrita.
-  const aceita = await repo.aceitar(id, ong);
-  if (!aceita) {
-    // Relê: a situação pode ter mudado entre a leitura acima e a escrita.
-    const atual = await repo.buscarPorId(id);
-    if (atual.status === 'cancelada') {
-      throw new Error('doação foi cancelada pelo doador');
-    }
-    throw new Error(`doação já foi aceita por ${atual.ong ?? 'outra ONG'}`);
-  }
-
-  return aceita;
+  return aplicarTransicao(id, {
+    escrever: () => repo.aceitar(id, ong),
+    recusa: (atual) =>
+      atual.status === 'cancelada'
+        ? 'doação foi cancelada pelo doador'
+        : `doação já foi aceita por ${atual.ong ?? 'outra ONG'}`,
+  });
 }
 
 // H1 — "o doador acompanha as suas doações".
@@ -76,53 +65,52 @@ export async function marcarColetada(id, voluntario) {
     throw new Error('informe o nome do voluntário que buscou a doação');
   }
 
-  const doacao = await repo.buscarPorId(id);
-  if (!doacao) {
-    throw new Error('doação não encontrada');
-  }
-
-  const coletada = await repo.marcarColetada(id, nome);
-  if (!coletada) {
-    throw new Error(
-      doacao.status === 'coletada'
+  return aplicarTransicao(id, {
+    escrever: () => repo.marcarColetada(id, nome),
+    recusa: (atual) =>
+      atual.status === 'coletada'
         ? 'doação já foi coletada'
-        : `doação não pode ser coletada: está ${doacao.status}`
-    );
-  }
-
-  return coletada;
+        : `doação não pode ser coletada: está ${atual.status}`,
+  });
 }
 
 // "O doador cancela uma doação ainda disponível."
 // Depois do aceite, a ONG já conta com a comida: cancelar deixa de ser permitido.
 export async function cancelar(id) {
-  const doacao = await repo.buscarPorId(id);
-  if (!doacao) {
-    throw new Error('doação não encontrada');
-  }
-
-  const cancelada = await repo.cancelar(id);
-  if (!cancelada) {
-    throw new Error(`doação não pode ser cancelada: está ${doacao.status}`);
-  }
-
-  return cancelada;
+  return aplicarTransicao(id, {
+    escrever: () => repo.cancelar(id),
+    recusa: (atual) => `doação não pode ser cancelada: está ${atual.status}`,
+  });
 }
 
 // H3 — "a ONG devolve uma doação aceita".
 // A doação volta para a lista de disponíveis, sem ONG; o motivo fica registrado.
 export async function devolver(id, ong, motivo) {
+  return aplicarTransicao(id, {
+    escrever: () => repo.devolver(id, ong, motivo),
+    recusa: (atual) => `doação não pode ser devolvida: está ${atual.status}`,
+  });
+}
+
+// Refatoração 2 — o começo comum de toda mudança de situação (D7).
+// Toda transição faz o mesmo: buscar a doação, recusar se ela não existe e
+// tentar a escrita condicional, que só altera a linha se a doação ainda estiver
+// na situação de origem (o banco decide — D1). Se a escrita não alterou nada,
+// a transição não é permitida: relê a doação, porque a situação pode ter mudado
+// entre a leitura e a escrita, e recusa com a mensagem própria da operação.
+//   escrever(doacao) → a doação alterada, ou undefined se a transição foi recusada
+//   recusa(atual)    → a mensagem de erro, a partir da situação atual
+async function aplicarTransicao(id, { escrever, recusa }) {
   const doacao = await repo.buscarPorId(id);
   if (!doacao) {
     throw new Error('doação não encontrada');
   }
 
-  const devolvida = await repo.devolver(id, ong, motivo);
-  if (!devolvida) {
-    throw new Error(`doação não pode ser devolvida: está ${doacao.status}`);
-  }
+  const alterada = await escrever(doacao);
+  if (alterada) return alterada;
 
-  return devolvida;
+  const atual = (await repo.buscarPorId(id)) ?? doacao;
+  throw new Error(recusa(atual));
 }
 
 // "A Marta vê quantas doações foram aceitas no mês."
