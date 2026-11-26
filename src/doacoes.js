@@ -24,6 +24,33 @@ export async function listarDisponiveis() {
   return repo.listarDisponiveis();
 }
 
+// Refatoração 2 — o começo comum de toda mudança de situação (D7).
+// Toda transição faz o mesmo: buscar a doação, recusar se ela não existe e
+// tentar a escrita condicional, que só altera a linha se a doação ainda estiver
+// na situação de origem (o banco decide — D1). Se a escrita não alterou nada,
+// a transição não é permitida: relê a doação, porque a situação pode ter mudado
+// entre a leitura e a escrita, e recusa com a mensagem própria da operação.
+//   escrever()    → a doação alterada, ou undefined se a transição foi recusada
+//   recusa(atual) → a mensagem de erro, a partir da situação atual
+async function aplicarTransicao(id, { escrever, recusa }) {
+  const doacao = await repo.buscarPorId(id);
+  if (!doacao) {
+    throw new Error('doação não encontrada');
+  }
+
+  const alterada = await escrever();
+  if (alterada) return alterada;
+
+  // Sem exclusão de doação no produto, a releitura só volta vazia se a linha
+  // sumir entre as duas leituras; nesse caso, o erro diz isso em vez de recusar
+  // com a situação antiga.
+  const atual = await repo.buscarPorId(id);
+  if (!atual) {
+    throw new Error('doação não encontrada');
+  }
+  throw new Error(recusa(atual));
+}
+
 // História zero — "uma ONG aceita uma doação".
 // Regra do caso: uma doação aceita não fica disponível para outra ONG.
 export async function aceitar(id, ong) {
@@ -90,33 +117,6 @@ export async function devolver(id, ong, motivo) {
     escrever: () => repo.devolver(id, ong, motivo),
     recusa: (atual) => `doação não pode ser devolvida: está ${atual.status}`,
   });
-}
-
-// Refatoração 2 — o começo comum de toda mudança de situação (D7).
-// Toda transição faz o mesmo: buscar a doação, recusar se ela não existe e
-// tentar a escrita condicional, que só altera a linha se a doação ainda estiver
-// na situação de origem (o banco decide — D1). Se a escrita não alterou nada,
-// a transição não é permitida: relê a doação, porque a situação pode ter mudado
-// entre a leitura e a escrita, e recusa com a mensagem própria da operação.
-//   escrever()    → a doação alterada, ou undefined se a transição foi recusada
-//   recusa(atual) → a mensagem de erro, a partir da situação atual
-async function aplicarTransicao(id, { escrever, recusa }) {
-  const doacao = await repo.buscarPorId(id);
-  if (!doacao) {
-    throw new Error('doação não encontrada');
-  }
-
-  const alterada = await escrever();
-  if (alterada) return alterada;
-
-  // Sem exclusão de doação no produto, a releitura só volta vazia se a linha
-  // sumir entre as duas leituras; nesse caso, o erro diz isso em vez de recusar
-  // com a situação antiga.
-  const atual = await repo.buscarPorId(id);
-  if (!atual) {
-    throw new Error('doação não encontrada');
-  }
-  throw new Error(recusa(atual));
 }
 
 // "A Marta vê quantas doações foram aceitas no mês."
