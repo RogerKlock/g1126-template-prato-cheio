@@ -58,7 +58,7 @@ describe('Marta vê quantas doações foram aceitas no mês', () => {
   it('não conta doações aceitas em outro mês', async () => {
     const antiga = await publicar();
     await aceitar(antiga.id);
-    await query("UPDATE doacoes SET aceita_em = '2026-09-15 12:00:00' WHERE id = ?", [antiga.id]);
+    await query("UPDATE doacoes SET aceita_em = '2026-09-15 12:00:00' WHERE id = $1", [antiga.id]);
 
     const deste = await request(app).get('/api/indicadores/aceitas-no-mes');
     const desetembro = await request(app).get('/api/indicadores/aceitas-no-mes?mes=2026-09');

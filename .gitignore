@@ -3,7 +3,7 @@ node_modules/
 .DS_Store
 .env
 
-# banco local de desenvolvimento (SQLite)
+# banco local antigo (SQLite, Unidades 1 e 2)
 dados.sqlite
 dados.sqlite-journal
 

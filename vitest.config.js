@@ -1,8 +1,9 @@
 export default {
   test: {
-    // SQLite em memória: os testes não tocam o arquivo do banco de desenvolvimento.
-    // Esta linha é só documentação: o src/db.js já força o banco de teste sempre
-    // que roda sob o Vitest, mesmo que este arquivo seja trocado (ADR 0002).
-    env: { DATABASE_FILE: ':memory:' }
-  }
+    // Cria o banco de teste (pratocheio_teste) no servidor da DATABASE_URL, se faltar.
+    globalSetup: ['./tests/preparar-banco-de-teste.js'],
+    // Todos os arquivos de teste usam o mesmo banco PostgreSQL e cada teste o limpa
+    // antes de rodar: rodar arquivos em paralelo faria um apagar os dados do outro.
+    fileParallelism: false,
+  },
 };
