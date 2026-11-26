@@ -33,6 +33,15 @@ export function criarApp() {
     }
   });
 
+  // H1: GET /api/doacoes/minhas?doador=Padaria%20Pão%20Bom
+  app.get('/api/doacoes/minhas', async (req, res) => {
+    try {
+      res.json(await doacoes.doacoesDoDoador(req.query.doador));
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
   app.get('/api/doacoes/aceitas', async (req, res) => {
     try {
       res.json(await doacoes.listarAceitas());
