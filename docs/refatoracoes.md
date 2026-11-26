@@ -53,7 +53,7 @@
     https://github.com/RogerKlock/g1126-template-prato-cheio/actions/runs/45859266280
   - depois (só a extração, nenhum teste alterado): **32 passando** — CI do PR da Refatoração 2
   - as fatias seguintes da H3 (CA2, CA3, motivo) já entraram usando `aplicarTransicao`.
-- **Revisão:** *(link do PR da Refatoração 2 com a revisão completa — ver `## O que a revisão mudou` no PR)*
+- Revisão: https://github.com/RogerKlock/g1126-template-prato-cheio/pull/12
 
 ---
 
