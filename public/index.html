@@ -37,6 +37,8 @@
   <ul id="minhas"></ul>
 
   <h2>Doações disponíveis</h2>
+  <label for="ong">Nome da sua ONG (para aceitar e devolver)</label>
+  <input id="ong" placeholder="Ex.: Casa Esperança" autocomplete="organization">
   <ul id="lista"></ul>
 
   <h2>Aceitas — aguardando coleta</h2>
@@ -49,6 +51,7 @@
     const campoDoador = document.getElementById('doador');
     try { campoDoador.value = localStorage.getItem('doador') || ''; } catch {}
     try { document.getElementById('voluntario').value = localStorage.getItem('voluntario') || ''; } catch {}
+    try { document.getElementById('ong').value = localStorage.getItem('ong') || ''; } catch {}
     campoDoador.onchange = () => {
       try { localStorage.setItem('doador', campoDoador.value.trim()); } catch {}
       carregarMinhas();
@@ -103,8 +106,33 @@
           carregarMinhas();
         };
         li.appendChild(botao);
+        const devolver = document.createElement('button');
+        devolver.textContent = 'Devolver (ONG)';
+        devolver.onclick = async () => {
+          const ong = nomeDaOng();
+          if (!ong) return;
+          const motivo = prompt('Por que a ONG vai devolver esta doação?', 'sem voluntário hoje');
+          if (motivo === null) return;
+          const res = await fetch(`/api/doacoes/${d.id}/devolver`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ong, motivo })
+          });
+          if (!res.ok) alert((await res.json()).erro);
+          carregar();
+          carregarAceitas();
+          carregarMinhas();
+        };
+        li.appendChild(devolver);
         lista.appendChild(li);
       }
+    }
+
+    function nomeDaOng() {
+      const ong = document.getElementById('ong').value.trim();
+      if (!ong) { alert('Digite o nome da sua ONG antes.'); return ''; }
+      try { localStorage.setItem('ong', ong); } catch {}
+      return ong;
     }
 
     async function carregar() {
@@ -120,11 +148,14 @@
         const botao = document.createElement('button');
         botao.textContent = 'Aceitar';
         botao.onclick = async () => {
-          await fetch(`/api/doacoes/${d.id}/aceitar`, {
+          const ong = nomeDaOng();
+          if (!ong) return;
+          const res = await fetch(`/api/doacoes/${d.id}/aceitar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ong: 'Minha ONG' })
+            body: JSON.stringify({ ong })
           });
+          if (!res.ok) alert((await res.json()).erro);
           carregar();
           carregarAceitas();
           carregarMinhas();

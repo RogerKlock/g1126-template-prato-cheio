@@ -40,15 +40,29 @@ comida foi buscada — e a Marta não tinha como mostrar se ela chega mais rápi
    Volte o nome para `Padaria Pão Bom`.
 
 ### Passo 2 — A ONG aceita
-1. **Ação:** em *Doações disponíveis*, no item `Bolo`, toque **Aceitar**.
-2. **Resultado esperado:** `Bolo` sai de *Doações disponíveis*, aparece em *Aceitas — aguardando coleta*
-   e, em *Minhas doações*, passa a **"aceita por Minha ONG — aguardando coleta"**.
+1. **Ação:** em *Doações disponíveis*, digite `Casa Esperança` no campo da ONG e toque **Aceitar**
+   no item `Bolo` e depois no item `Pão`.
+2. **Resultado esperado:** `Bolo` e `Pão` saem de *Doações disponíveis* e aparecem em
+   *Aceitas — aguardando coleta*; em *Minhas doações*, os dois passam a
+   **"aceita por Casa Esperança — aguardando coleta"**.
 
 ### Passo 3 — H2 · O voluntário confirma a coleta
 1. **Ação:** em *Aceitas — aguardando coleta*, digite `Rui` no campo do voluntário e toque
    **Confirmar coleta** no item `Bolo`.
-2. **Resultado esperado:** `Bolo` sai de *Aceitas*; em *Minhas doações* aparece **"coletada por Minha ONG"**
+2. **Resultado esperado:** `Bolo` sai de *Aceitas*; em *Minhas doações* aparece **"coletada por Casa Esperança"**
    (o nome do voluntário não aparece para o doador — D9).
+
+### Passo 4 — H3 · A ONG devolve uma doação aceita
+1. **Ação:** em *Aceitas — aguardando coleta*, no item `Pão`, toque **Devolver (ONG)** e confirme o
+   motivo `sem voluntário hoje`.
+2. **Resultado esperado:** `Pão` sai de *Aceitas* e **volta para *Doações disponíveis***, com os
+   botões **Aceitar** e **Cancelar**; em *Minhas doações* volta a **"disponível — aguardando uma ONG"**.
+
+### Passo 5 — Um caso de erro: outra ONG tenta devolver
+1. **Ação:** com `Casa Esperança` no campo da ONG, toque **Aceitar** no `Pão` de novo. Troque o campo
+   da ONG para `Lar Esperança` e toque **Devolver (ONG)** no `Pão`, em *Aceitas*.
+2. **Resultado esperado:** aparece o aviso **"doação foi aceita por Casa Esperança; só Casa Esperança
+   pode devolvê-la"**, e o `Pão` continua em *Aceitas*, no nome da Casa Esperança.
 
 ## Testado por
 
