@@ -75,6 +75,15 @@ export function criarApp() {
     }
   });
 
+  // H4: GET /api/indicadores/resultado-do-mes?mes=AAAA-MM
+  app.get('/api/indicadores/resultado-do-mes', async (req, res) => {
+    try {
+      res.json(await doacoes.resultadoDoMes(req.query.mes));
+    } catch (erro) {
+      res.status(400).json({ erro: erro.message });
+    }
+  });
+
   app.get('/api/indicadores/aceitas-no-mes', async (req, res) => {
     try {
       res.json(await doacoes.aceitasNoMes(req.query.mes));

@@ -126,10 +126,34 @@ async function aplicarTransicao(id, { escrever, recusa }) {
 // "A Marta vê quantas doações foram aceitas no mês."
 // Conta toda doação aceita no mês, mesmo que já tenha sido coletada depois.
 export async function aceitasNoMes(mes = mesAtual()) {
+  validarMes(mes);
+  return { mes, aceitas: await repo.contarAceitasNoMes(mes) };
+}
+
+// H4 — "a Marta vê o resultado do mês".
+// Cada doação conta no mês em que foi publicada (D11). O tempo médio vai da
+// publicação até a coleta, em horas com uma casa decimal; sem coletas no mês,
+// ele não é zero: é "sem coletas no mês".
+export async function resultadoDoMes(mes = mesAtual()) {
+  validarMes(mes);
+  const r = await repo.resultadoDoMes(mes);
+  const horas = r.tempo_medio_horas;
+  return {
+    mes,
+    publicadas: r.publicadas,
+    aceitas: r.aceitas,
+    coletadas: r.coletadas,
+    devolvidas: r.devolvidas,
+    tempoMedioAteColetaHoras: horas,
+    tempoMedioAteColeta:
+      horas === null ? 'sem coletas no mês' : `${String(horas).replace('.', ',')} h`,
+  };
+}
+
+function validarMes(mes) {
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mes)) {
     throw new Error('mês inválido: use o formato AAAA-MM');
   }
-  return { mes, aceitas: await repo.contarAceitasNoMes(mes) };
 }
 
 function mesAtual() {

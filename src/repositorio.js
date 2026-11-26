@@ -126,3 +126,27 @@ export async function devolver(id, ong, motivo) {
   );
   return rows[0];
 }
+
+// H4: o resultado de um mês, contando cada doação no mês em que foi PUBLICADA
+// (D11), no fuso da sessão (o do piloto — ver src/db.js).
+// count(*) volta como bigint e round() como numeric: o src/db.js os entrega como
+// número. Sem coletas, avg() é NULL, e NULL continua null.
+export async function resultadoDoMes(mes) {
+  const { rows } = await query(
+    `SELECT
+       count(*) AS publicadas,
+       count(*) FILTER (WHERE status IN ('aceita', 'coletada')) AS aceitas,
+       count(*) FILTER (WHERE status = 'coletada') AS coletadas,
+       (SELECT count(*) FROM devolucoes v
+          JOIN doacoes d ON d.id = v.doacao_id
+         WHERE to_char(d.criada_em, 'YYYY-MM') = $1) AS devolvidas,
+       round(
+         avg(extract(epoch FROM coletada_em - criada_em)) FILTER (WHERE status = 'coletada') / 3600,
+         1
+       ) AS tempo_medio_horas
+     FROM doacoes
+     WHERE to_char(criada_em, 'YYYY-MM') = $1`,
+    [mes]
+  );
+  return rows[0];
+}
