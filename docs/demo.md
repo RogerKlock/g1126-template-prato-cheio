@@ -64,6 +64,18 @@ comida foi buscada — e a Marta não tinha como mostrar se ela chega mais rápi
 2. **Resultado esperado:** aparece o aviso **"doação foi aceita por Casa Esperança; só Casa Esperança
    pode devolvê-la"**, e o `Pão` continua em *Aceitas*, no nome da Casa Esperança.
 
+### Passo 6 — H4 · A Marta vê o resultado do mês
+1. **Ação:** no topo, em *Resultado do mês (coordenação)*, deixe o mês atual.
+2. **Resultado esperado:** **Publicadas: 2 · Aceitas: 2 · Coletadas: 1 · Devolvidas: 1** — o `Bolo`
+   (coletado) e o `Pão` (devolvido no passo 4 e aceito de novo no passo 5) — e *Tempo médio até a
+   coleta* em minutos (ex.: `3 min`), contado da publicação do `Bolo` até a coleta.
+3. **Ação:** troque o mês para o mês anterior.
+4. **Resultado esperado:** **Publicadas: 0** e **Tempo médio até a coleta: sem coletas no mês** — não `0`.
+
+### Passo 7 — O que falta (fala, 30 s)
+Ler `## Limitações do produto` em `docs/validacao.md`: o doador e a ONG se identificam só pelo nome
+digitado (qualquer um que digite o nome vê e age), não há envio offline e a Marta não exporta o resultado.
+
 ## Testado por
 
 Outro integrante executou este roteiro sem ajuda: **[nome]**, em **[data]**.
