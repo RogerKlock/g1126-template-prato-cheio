@@ -1,4 +1,4 @@
-# Prato Cheio — [nome do grupo]
+# Prato Cheio
 
 Projeto da disciplina **Análise, Projeto e Desenvolvimento Ágil**.
 Conecta doadores de alimentos excedentes a ONGs, antes que a comida se perca.
@@ -7,55 +7,95 @@ Conecta doadores de alimentos excedentes a ONGs, antes que a comida se perca.
 > walking skeleton (U1) → incremento guiado pelo projeto (U2) → produto refatorado (U3).
 
 ## Integrantes
-- Nome — @MiguelHort
-- Nome — @RogerKlock
+- Miguel David Hort — @MiguelHort
+- Roger Klock — @RogerKlock
+
+### Donos e revisores do Trabalho 3
+
+| Iteração | História | Dono | Revisor |
+|---|---|---|---|
+| 0 | Base: PostgreSQL, CI, definição de pronto, estados da doação | Miguel David Hort | Roger Klock |
+| 1 | H1 · O doador acompanha as suas doações | Miguel David Hort | Roger Klock |
+| 2 | H2 · O voluntário confirma a coleta | Miguel David Hort | Roger Klock |
+| 3 | H3 · A ONG devolve uma doação aceita + Refatoração 2 | Miguel David Hort | Roger Klock |
+| 4 | H4 · A Marta vê o resultado do mês | Miguel David Hort | Roger Klock |
+| F | Fechamento: clone limpo, demo testada, validação, retrospectiva | Roger Klock | Miguel David Hort |
 
 ## Como rodar
 
-Requisito: **Node.js 22.13 ou superior**. Mais nada — o banco da Unidade 1 é SQLite, embutido no próprio Node.
+O produto roda sobre **PostgreSQL 16** (Refatoração 1, ADR 0001). Requisitos:
+**Node.js 22.13 ou superior** e um PostgreSQL alcançável pela `DATABASE_URL` —
+o caminho escolhido pelo grupo é o contêiner do `docker-compose.yml` (precisa de Docker).
 
-> Esta é a **stack preferencial** da disciplina. Se o seu grupo optar por outra, registre o ADR de justificativa e garanta os mesmos compromissos: repositório público com CI verde, rota de saúde, testes por um comando, os três comandos documentados aqui no README e banco relacional migrado para PostgreSQL na Unidade 3.
+**1. Subir o banco** (uma vez por sessão de trabalho):
+
+```bash
+docker compose up -d
+```
+
+**2. Apontar a `DATABASE_URL`** para ele. Copie o exemplo — ele já serve para o
+contêiner acima; em outro servidor, troque usuário, senha, host e porta
+(**nunca** coloque no repositório a senha real do piloto):
+
+```bash
+cp .env.example .env
+# DATABASE_URL=postgres://pratocheio:pratocheio@localhost:5432/pratocheio
+```
+
+O `npm start` lê o `.env`; para os testes, exporte a variável no terminal
+(`export DATABASE_URL=...`) ou use o valor padrão, que é o mesmo do exemplo.
+
+**3. Os três comandos:**
 
 ```bash
 npm install       # só na primeira vez
-npm run db:migrar # cria o schema (arquivo dados.sqlite)
-npm start         # sobe em http://localhost:3000
-npm test          # roda os testes
-npm run dev       # sobe recarregando a cada alteração
+npm start         # cria/atualiza o schema e sobe em http://localhost:3000
+npm test          # roda os testes (no banco pratocheio_teste, criado sozinho)
 ```
 
-Os testes usam SQLite **em memória**, então não sujam o banco de desenvolvimento.
-Isso não depende da configuração: sob o Vitest o `src/db.js` usa sempre `:memory:`, e o
-`limparBanco()` se recusa a apagar qualquer outro banco (ADR 0002). Mesmo assim, **não rode
-os testes na máquina do piloto**: não há motivo para isso, e o banco real fica lá.
+Outros: `npm run db:migrar` (só cria/atualiza o schema) e `npm run dev` (recarrega a cada alteração).
 
-> Ao rodar `npm test` o Node imprime `ExperimentalWarning: SQLite is an experimental feature`.
-> É esperado — o módulo embutido `node:sqlite` ainda é marcado como experimental. Não é erro e não reprova o CI.
+Os testes **nunca** usam o banco `pratocheio`: sob o Vitest o `src/db.js` troca o nome
+do banco da `DATABASE_URL` por `pratocheio_teste`, e o `limparBanco()` se recusa a apagar
+qualquer banco cujo `current_database()` não seja esse (ADR 0002). Os arquivos de teste
+rodam um de cada vez, porque compartilham o mesmo banco.
 
-> **Atenção:** não deixe o repositório dentro de uma pasta sincronizada (OneDrive, Google Drive, Dropbox) nem em disco de rede. O SQLite precisa de trava de arquivo e nesses lugares falha com `disk I/O error`. Clone em uma pasta local comum, por exemplo `~/dev/`.
+Para abrir no celular, na mesma rede Wi-Fi: `http://<ip-do-computador>:3000`.
 
-## O banco: SQLite agora, PostgreSQL depois
+## Definição de pronto
+
+Uma história só está pronta quando **todos** os itens abaixo são verdade — e cada um se confere sem perguntar a ninguém:
+
+| # | Item | Onde se confere |
+|---|---|---|
+| 1 | Cada critério de aceite da história tem um `it` com o nome da regra, e há pelo menos um caso limite ou de erro | `tests/` — o nome do `it` citado no PR e em `docs/validacao.md` |
+| 2 | `npm test` passa sobre PostgreSQL no CI, no PR e na `main` depois do merge | aba *Actions* (job `build-e-testes`) |
+| 3 | Entrou por PR revisado e aprovado por outro integrante, com a branch atualizada antes do merge | aba *Pull requests* → revisões do PR |
+| 4 | O PR descreve a história, o critério de origem, as fatias e a seção `## Uso de IA` | descrição do PR |
+| 5 | Regra em `src/doacoes.js`, SQL só em `src/repositorio.js` (nenhum SQL nem tipo do banco nas regras) | `git diff` do PR |
+| 6 | Há um passo novo no roteiro da demo, executável no navegador do celular | `docs/demo.md` |
+| 7 | A história tem a sua linha no quadro de validação, com evidência | `docs/validacao.md` |
+
+## O banco: SQLite nas Unidades 1 e 2, PostgreSQL na Unidade 3
 
 | Unidade | Banco | O que precisa instalar |
 |---|---|---|
-| 1 — Análise | **SQLite** (`node:sqlite`, embutido) | nada além do Node |
+| 1 — Análise | SQLite (`node:sqlite`, embutido) | nada além do Node |
 | 2 — Projeto | SQLite | nada |
-| 3 — Construção | **PostgreSQL** (após refatorar) | um PostgreSQL acessível — o caminho é escolha do grupo |
+| 3 — Construção | **PostgreSQL 16** (Refatoração 1) | Docker (`docker compose up -d`) ou outro PostgreSQL |
 
-A troca não é acidente de percurso: na Unidade 2 vocês registram a decisão em um **ADR** (alternativas, consequências, riscos) e na Unidade 3 executam a **refatoração** — com os testes existentes provando que o comportamento se manteve.
-
-O `src/db.js` foi desenhado para isso: ele expõe `query()` devolvendo `{ rows }`, então a troca do banco fica contida nele e não vaza para as regras de negócio.
-
-**Como o PostgreSQL vai subir é decisão do grupo**, comparada no mesmo ADR: instalar o PostgreSQL na máquina, subir um contêiner, ou usar um serviço gerenciado gratuito (Neon, Supabase, Render). A disciplina não impõe o caminho — exige o banco alcançável por `DATABASE_URL`, o schema migrado e o CI verde. Cada opção tem custo e risco diferentes, e reconhecê-los é parte da decisão.
+A troca foi decidida no **ADR 0001** e executada como a **Refatoração 1**
+(`docs/refatoracoes.md`): os testes existentes provam que o comportamento se manteve,
+e `src/doacoes.js` ficou fora do diff da migração, porque `query()` continua devolvendo `{ rows }`.
 
 ## Estrutura
 
 ```
 src/server.js        entrypoint (npm start)
-src/db.js            conexão e schema do banco (pronto)
+src/db.js            conexão PostgreSQL, schema e tipos do banco
 src/app.js           rotas da API
-src/doacoes.js       regras de negócio      (implementado — U1)
-src/repositorio.js   acesso ao banco (SQL)  (implementado — U1)
+src/doacoes.js       regras de negócio
+src/repositorio.js   acesso ao banco (SQL)
 public/index.html    interface (funciona no celular)
 tests/               testes automatizados
 docs/analise.md      documento de análise   (Trabalho 1)
@@ -65,7 +105,8 @@ docs/validacao.md    validação e testes     (Trabalho 3)
 docs/refatoracoes.md refatorações feitas    (Trabalho 3)
 docs/demo.md         roteiro da demo        (Trabalho 3)
 docs/retrospectivas/ retrospectiva de cada iteração
-.github/workflows/   pipeline de CI
+.github/workflows/   pipeline de CI (sobre PostgreSQL)
+docker-compose.yml   PostgreSQL de desenvolvimento
 ```
 
 ## Como trabalhar (fluxo de Pull Request)
@@ -88,7 +129,7 @@ peça a revisão de **outro integrante**. Só então faça o merge.
 ponta, sem mock em nenhuma camada:
 
 ```
-public/index.html  →  src/app.js  →  src/doacoes.js  →  src/repositorio.js  →  SQLite
+public/index.html  →  src/app.js  →  src/doacoes.js  →  src/repositorio.js  →  PostgreSQL
    interface            HTTP            regras             SQL                  dados
 ```
 
